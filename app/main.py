@@ -1,4 +1,5 @@
 from fastapi import Depends, FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
 from app.config import settings
@@ -8,8 +9,19 @@ from app.schemas import OntologyLinkCreate, OntologyObjectCreate, OntologyTypeCr
 
 app = FastAPI(
     title=settings.app_name,
-    version="0.1.0",
+    version="0.2.0",
     description="Governed ontology-centric industrial AI platform",
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
@@ -20,7 +32,7 @@ def startup() -> None:
 
 @app.get("/health")
 def health() -> dict:
-    return {"status": "ok", "service": settings.app_name}
+    return {"status": "ok", "service": settings.app_name, "version": "0.2.0"}
 
 
 @app.get("/api/v1/ontology/types")
@@ -45,6 +57,11 @@ def create_type(payload: OntologyTypeCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(obj)
     return obj
+
+
+@app.get("/api/v1/ontology/objects")
+def list_objects(db: Session = Depends(get_db)):
+    return db.query(OntologyObject).order_by(OntologyObject.created_at.desc()).limit(500).all()
 
 
 @app.post("/api/v1/ontology/objects")
@@ -90,3 +107,8 @@ def create_link(payload: OntologyLinkCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(link)
     return link
+
+
+@app.get("/api/v1/audit/events")
+def list_audit_events(db: Session = Depends(get_db)):
+    return db.query(AuditEvent).order_by(AuditEvent.created_at.desc()).limit(500).all()
