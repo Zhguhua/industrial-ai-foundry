@@ -1,75 +1,98 @@
 # Industrial AI Foundry
 
-A private, ontology-centric enterprise AI platform for industrial data, knowledge graphs, governed AI agents, workflows and auditability.
+Private ontology-centric enterprise AI platform for industrial data, engineering knowledge, process safety, governed AI agents and auditable workflows.
 
-This project is **inspired by general ontology-centric enterprise architecture patterns**. It does not copy proprietary Palantir code, assets, trade secrets, or UI.
+> Independent implementation based on general enterprise ontology and governed-AI architecture patterns. No proprietary Palantir code, assets, trade secrets or copied UI are used.
 
-## Vision
+## v0.2 Foundry Console
 
-Build a governed industrial intelligence layer that connects:
+The repository now includes a React/TypeScript enterprise console with:
 
-- enterprise data sources and engineering documents
-- process/asset context
-- ontology and knowledge graphs
-- RAG and semantic retrieval
-- AI agents and deterministic tools
-- human approvals
-- policy enforcement
-- complete action traceability
+- Overview / operating dashboard
+- Ontology Studio
+- Object Explorer
+- Knowledge Graph workspace
+- Agent Studio
+- Workflow Studio
+- Policy Center
+- Audit Log
+- live FastAPI health and ontology/audit reads
 
-Initial process-safety target:
+The initial process-safety ontology is seeded automatically at backend startup.
 
-```text
-P&ID -> DEXPI -> Asset Ontology -> Knowledge Graph
-     -> PHA / HAZOP / LOPA / SIL
-     -> AI Agent Analysis
-     -> Human Review
-     -> Auditable Action
-```
-
-## Logical architecture
+## Industrial intelligence flow
 
 ```text
-Data Sources
-    |
-    v
-Ingestion + Lineage
-    |
-    v
-Enterprise Ontology
-    |
-    +--> PostgreSQL / pgvector
-    +--> Neo4j Knowledge Graph
-    +--> MinIO Object Storage
-    |
-    v
-AI Runtime
-    |
-    +--> RAG
-    +--> Agents
-    +--> Governed Tools
-    +--> Workflows
-    |
-    v
-Governance
-    |
-    +--> RBAC / ABAC
-    +--> Policy
-    +--> Audit
-    +--> Human Approval
+P&ID / DEXPI
+      |
+      v
+Asset + Instrument Ontology
+      |
+      +------> Process Connectivity Graph
+      |
+      +------> HAZOP / LOPA Context
+                         |
+                         v
+                  Governed AI Agents
+                         |
+                  Policy + Human Gate
+                         |
+                         v
+               Recommendation / Action
+                         |
+                       Audit
 ```
+
+## Stack
+
+### Application
+- React + TypeScript + Vite
+- FastAPI
+- SQLAlchemy
+
+### Data / knowledge
+- PostgreSQL
+- pgvector
+- Neo4j
+- Redis
+- MinIO
+
+### Runtime
+- Docker Compose
+
+## Run locally
+
+```bash
+cp .env.example .env
+docker compose up --build
+```
+
+Then open:
+
+- Foundry Console: http://localhost:5173
+- FastAPI: http://localhost:8000
+- Swagger: http://localhost:8000/docs
+- Neo4j Browser: http://localhost:7474
+- MinIO Console: http://localhost:9001
 
 ## Core ontology
 
-- OntologyType
-- OntologyObject
-- OntologyLink
-- AgentDefinition
-- WorkflowDefinition
-- Policy
-- AuditEvent
+```text
+OntologyType
+    |
+    +--> OntologyObject
+            |
+            +--> OntologyLink --> OntologyObject
 
-## Industrial/process-safety ontology
+AgentDefinition
+WorkflowDefinition
+Policy
+AuditEvent
+```
+
+## Process-safety ontology
+
+The current seed includes:
 
 - Site
 - Plant
@@ -90,62 +113,79 @@ Governance
 - Recommendation
 - ActionItem
 
-## Stack
+Important relationships include:
 
-- FastAPI
-- SQLAlchemy
-- PostgreSQL + pgvector
-- Neo4j
-- Redis
-- MinIO
-- Docker Compose
-- React/TypeScript planned for v0.2
+```text
+Equipment --LOCATED_IN-----> Unit
+Equipment --REPRESENTED_ON-> PIDDocument
+Equipment --REPRESENTED_BY-> DEXPINode
+Equipment --INCLUDED_IN----> HAZOPNode
 
-## Run locally
-
-```bash
-cp .env.example .env
-docker compose up --build
+HAZOPNode --HAS_DEVIATION--> Deviation
+Deviation --HAS_CAUSE------> Cause
+Deviation --LEADS_TO-------> Consequence
+Consequence --MITIGATED_BY-> Safeguard
+Safeguard --CREDITED_AS----> IPL
 ```
 
-API:
-- http://localhost:8000
-- Swagger: http://localhost:8000/docs
+## Security model
 
-## Roadmap
+AI agents must not have unrestricted direct access to enterprise databases.
 
-### v0.1 — Foundation
+The intended execution path is:
+
+```text
+User / Agent
+    |
+Scoped Ontology Query
+    |
+Policy Evaluation
+    |
+Approved Tool / Action
+    |
+Human Approval (when required)
+    |
+State Change
+    |
+Audit Event
+```
+
+## Development roadmap
+
+### v0.1 — Foundation ✅
 - ontology object/link model
-- FastAPI API
-- agent/workflow/policy models
-- audit events
-- process-safety ontology seed
-- local infrastructure stack
+- FastAPI
+- PostgreSQL / pgvector
+- Neo4j / Redis / MinIO
+- governance models
+- process-safety ontology
 
-### v0.2 — Foundry Console
+### v0.2 — Foundry Console ✅
 - React/TypeScript shell
 - ontology studio
 - object explorer
-- graph explorer
+- graph workspace
 - agent studio
 - workflow studio
+- policy center
 - audit console
+- automatic ontology seed
 
-### v0.3 — Industrial intelligence
+### v0.3 — Industrial Intelligence
+Next:
+- real Neo4j graph projection
 - DEXPI/P&ID ingestion
-- process connectivity graph
-- HAZOP/PHA graph model
-- pgvector semantic search
-- governed safety-analysis agents
+- process-connectivity graph
+- editable ontology/object forms
+- pgvector semantic retrieval
+- PHA/HAZOP context builder
+- governed PHA Copilot
 
-### v0.4 — Enterprise governance
-- policy engine
-- RBAC/ABAC
-- human-in-the-loop approvals
-- evaluation/observability
+### v0.4 — Enterprise AI Governance
+- RBAC + ABAC
 - action contracts
+- human-in-the-loop approvals
+- agent evaluation
+- model/provider abstraction
+- prompt/context/tool traceability
 - lineage visualization
-
-## Security principle
-
-AI agents do not receive unrestricted database access. They operate through typed ontology services and explicitly governed tools with policy checks, scopes and audit logging.
