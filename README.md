@@ -6,7 +6,7 @@ Ontology-centric enterprise AI platform for governed documents, administration, 
 
 > Independent implementation based on general enterprise ontology and governed-AI architecture patterns. No proprietary Palantir code, assets, trade secrets or copied UI are used.
 
-## Current release: v0.5 Enterprise Knowledge Foundation
+## Current release: v0.5.1 Document Runtime
 
 v0.5 extends the platform from industrial intelligence into a broader enterprise knowledge foundation.
 
@@ -54,6 +54,9 @@ POST      /api/v1/enterprise/workspace-members
 
 GET/POST  /api/v1/enterprise/documents
 GET/POST  /api/v1/enterprise/documents/{id}/versions
+POST      /api/v1/enterprise/documents/{id}/upload
+GET       /api/v1/enterprise/documents/{id}/versions/{version}/metadata
+GET       /api/v1/enterprise/documents/{id}/versions/{version}/download
 
 GET/POST  /api/v1/enterprise/admin/cases
 
@@ -158,14 +161,20 @@ DEXPI recognition, confidence review state and connectivity derivation.
 - Administration UI
 - multilingual/mobile enterprise navigation
 
-### v0.5.1 — Document Runtime
-Next:
-- MinIO binary document storage
+### v0.5.1 — Document Runtime ✅
+- MinIO content-addressed binary storage
 - PDF / DOCX / XLSX / CSV ingestion
-- metadata extraction
-- document previews
-- checksums / duplicate detection
-- version upload UI
+- SHA-256 checksums and binary deduplication
+- governed document version upload API
+- controlled download through FastAPI
+- PDF page count + text extraction
+- DOCX paragraph extraction
+- XLSX sheet/row extraction
+- CSV row extraction
+- 50 MiB upload limit and file-type allowlist
+- Document Center version upload UI
+
+Document binaries are not stored in PostgreSQL. MinIO stores binary content while PostgreSQL remains the governed metadata/version system of record.
 
 ### v0.6 — Enterprise Retrieval & Governance
 Planned:

@@ -50,6 +50,24 @@ export type EnterpriseDocument = {
   updated_at: string;
 };
 
+export type DocumentVersion = {
+  id: string;
+  document_id: string;
+  version_no: number;
+  file_name: string;
+  mime_type?: string | null;
+  checksum?: string | null;
+  storage_uri?: string | null;
+  metadata_json: Record<string, unknown>;
+  created_by?: string | null;
+  created_at: string;
+};
+
+export type DocumentUploadResult = {
+  version: DocumentVersion;
+  duplicate_of_version_id?: string | null;
+};
+
 export type AdministrativeCase = {
   id: string;
   workspace_id: string;
@@ -118,6 +136,18 @@ export const api = {
   documents: (workspaceId?: string) => request<EnterpriseDocument[]>(
     "/api/v1/enterprise/documents" + (workspaceId ? "?workspace_id=" + encodeURIComponent(workspaceId) : "")
   ),
+  documentVersions: (documentId: string) => request<DocumentVersion[]>(
+    "/api/v1/enterprise/documents/" + encodeURIComponent(documentId) + "/versions"
+  ),
+  uploadDocumentVersion: (documentId: string, file: File, createdBy?: string) => {
+    const body = new FormData();
+    body.append("file", file);
+    if (createdBy) body.append("created_by", createdBy);
+    return request<DocumentUploadResult>(
+      "/api/v1/enterprise/documents/" + encodeURIComponent(documentId) + "/upload",
+      { method: "POST", body }
+    );
+  },
   administrativeCases: (workspaceId?: string) => request<AdministrativeCase[]>(
     "/api/v1/enterprise/admin/cases" + (workspaceId ? "?workspace_id=" + encodeURIComponent(workspaceId) : "")
   ),

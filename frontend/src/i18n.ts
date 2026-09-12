@@ -84,7 +84,15 @@ const translations = {
     caseNumber: "Case number",
     dueDate: "Due date",
     target: "Target",
-    enterpriseFoundation: "Enterprise Knowledge Foundation"
+    enterpriseFoundation: "Enterprise Knowledge Foundation",
+    uploadVersion: "Upload new version",
+    selectDocument: "Select document",
+    selectFile: "Select PDF, DOCX, XLSX or CSV",
+    upload: "Upload",
+    uploading: "Uploading...",
+    uploadSuccess: "Document version uploaded",
+    duplicateBinary: "Identical binary already exists; storage was deduplicated",
+    fileRuntimeNote: "Files are stored in MinIO; PostgreSQL stores governed metadata and versions."
   },
   de: {
     overview: "Übersicht",
@@ -169,7 +177,15 @@ const translations = {
     caseNumber: "Vorgangsnummer",
     dueDate: "Frist",
     target: "Zielobjekt",
-    enterpriseFoundation: "Enterprise Knowledge Foundation"
+    enterpriseFoundation: "Enterprise Knowledge Foundation",
+    uploadVersion: "Neue Version hochladen",
+    selectDocument: "Dokument auswählen",
+    selectFile: "PDF, DOCX, XLSX oder CSV auswählen",
+    upload: "Hochladen",
+    uploading: "Wird hochgeladen...",
+    uploadSuccess: "Dokumentversion wurde hochgeladen",
+    duplicateBinary: "Identische Datei war bereits vorhanden; Binärspeicher wurde dedupliziert",
+    fileRuntimeNote: "Dateien liegen in MinIO; PostgreSQL verwaltet kontrollierte Metadaten und Versionen."
   },
   zh: {
     overview: "总览",
@@ -254,7 +270,15 @@ const translations = {
     caseNumber: "事项编号",
     dueDate: "截止日期",
     target: "目标",
-    enterpriseFoundation: "企业知识基础"
+    enterpriseFoundation: "企业知识基础",
+    uploadVersion: "上传新版本",
+    selectDocument: "选择文档",
+    selectFile: "选择 PDF、DOCX、XLSX 或 CSV",
+    upload: "上传",
+    uploading: "正在上传...",
+    uploadSuccess: "文档版本已上传",
+    duplicateBinary: "相同文件已存在，二进制存储已去重",
+    fileRuntimeNote: "文件存储在 MinIO；PostgreSQL 保存受治理的元数据和版本。"
   }
 } as const;
 

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ChangeEvent, type ReactNode } from "react";
 import {
   AdministrativeCase,
   ApprovalTask,
@@ -100,6 +100,10 @@ export function EnterpriseModule({ view, t }: { view: EnterpriseView; t: T }) {
   const [cases, setCases] = useState<AdministrativeCase[]>([]);
   const [approvals, setApprovals] = useState<ApprovalTask[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedUploadDocumentId, setSelectedUploadDocumentId] = useState("");
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadMessage, setUploadMessage] = useState("");
 
   useEffect(() => {
     if (previewMode) {
@@ -125,6 +129,42 @@ export function EnterpriseModule({ view, t }: { view: EnterpriseView; t: T }) {
       })
       .finally(() => setLoading(false));
   }, []);
+
+  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setUploadFile(event.target.files?.[0] || null);
+    setUploadMessage("");
+  };
+
+  const uploadVersion = async () => {
+    if (!selectedUploadDocumentId || !uploadFile) return;
+
+    if (previewMode) {
+      setUploadMessage(t("fileRuntimeNote"));
+      return;
+    }
+
+    setUploading(true);
+    setUploadMessage("");
+    try {
+      const result = await api.uploadDocumentVersion(
+        selectedUploadDocumentId,
+        uploadFile,
+        "document-center"
+      );
+      setUploadMessage(
+        result.duplicate_of_version_id
+          ? t("duplicateBinary")
+          : t("uploadSuccess")
+      );
+      const refreshed = await api.documents();
+      setDocuments(refreshed);
+      setUploadFile(null);
+    } catch (error) {
+      setUploadMessage(error instanceof Error ? error.message : "Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const stats = useMemo(
     () => ({
@@ -170,6 +210,37 @@ export function EnterpriseModule({ view, t }: { view: EnterpriseView; t: T }) {
 
       {view === "documents" && (
         <EnterprisePanel title={t("documents")} subtitle={t("documentSubtitle")}>
+          <div className="document-runtime">
+            <div>
+              <strong>{t("uploadVersion")}</strong>
+              <p>{t("fileRuntimeNote")}</p>
+            </div>
+            <select
+              value={selectedUploadDocumentId}
+              onChange={(event) => setSelectedUploadDocumentId(event.target.value)}
+            >
+              <option value="">{t("selectDocument")}</option>
+              {documents.map((document) => (
+                <option key={document.id} value={document.id}>{document.title}</option>
+              ))}
+            </select>
+            <label className="secondary document-file-button">
+              {uploadFile?.name || t("selectFile")}
+              <input
+                type="file"
+                accept=".pdf,.docx,.xlsx,.csv"
+                onChange={handleFileChange}
+              />
+            </label>
+            <button
+              className="primary"
+              disabled={!selectedUploadDocumentId || !uploadFile || uploading}
+              onClick={uploadVersion}
+            >
+              {uploading ? t("uploading") : t("upload")}
+            </button>
+          </div>
+          {uploadMessage && <div className="document-runtime-message">{uploadMessage}</div>}
           <div className="enterprise-table">
             <div className="enterprise-table-head">
               <span>Document</span>
