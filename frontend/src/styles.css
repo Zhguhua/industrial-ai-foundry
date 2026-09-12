@@ -568,3 +568,47 @@ nav { display: grid; gap: 4px; }
   .document-runtime .primary,
   .document-runtime .secondary { width: 100%; justify-content: center; }
 }
+
+
+/* Public preview release visibility */
+.release-strip {
+  margin-top: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  font-size: 10px;
+  color: #8ea0b8;
+}
+.release-strip span,
+.release-strip code {
+  border: 1px solid #2a3950;
+  background: #101824;
+  border-radius: 999px;
+  padding: 6px 9px;
+}
+.release-strip code {
+  color: #9db8ff;
+}
+:root[data-theme="light"] .release-strip {
+  color: #607089;
+}
+:root[data-theme="light"] .release-strip span,
+:root[data-theme="light"] .release-strip code {
+  background: #f7f9fc;
+  border-color: #d8e0eb;
+}
+:root[data-theme="light"] .release-strip code {
+  color: #315fc4;
+}
+@media (max-width: 700px) {
+  .release-strip {
+    align-items: stretch;
+  }
+  .release-strip span,
+  .release-strip code {
+    width: 100%;
+    border-radius: 7px;
+    text-align: center;
+  }
+}
