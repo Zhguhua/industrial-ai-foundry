@@ -32,3 +32,13 @@ class PHADraftRequest(BaseModel):
 class GraphNeighborhoodRequest(BaseModel):
     object_id: str
     depth: int = Field(default=2, ge=1, le=4)
+
+
+class DocumentRequest(BaseModel):
+    document_id: str
+
+
+class RecognitionApplyRequest(BaseModel):
+    object_id: str
+    target_type_key: str
+    subtype: str | None = None
