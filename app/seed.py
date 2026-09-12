@@ -6,14 +6,16 @@ from sqlalchemy.orm import Session
 from app.models import AuditEvent, OntologyType
 
 
-ONTOLOGY_PATH = Path(__file__).resolve().parents[1] / "ontology" / "process_safety.yaml"
+ROOT = Path(__file__).resolve().parents[1]
+PROCESS_SAFETY_ONTOLOGY = ROOT / "ontology" / "process_safety.yaml"
+ENTERPRISE_ONTOLOGY = ROOT / "ontology" / "enterprise.yaml"
 
 
-def seed_process_safety_ontology(db: Session) -> int:
-    if not ONTOLOGY_PATH.exists():
+def _seed_ontology_file(db: Session, path: Path, action: str) -> int:
+    if not path.exists():
         return 0
 
-    data = yaml.safe_load(ONTOLOGY_PATH.read_text(encoding="utf-8")) or {}
+    data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
     object_types = data.get("object_types", {})
     created = 0
 
@@ -25,7 +27,7 @@ def seed_process_safety_ontology(db: Session) -> int:
         obj = OntologyType(
             key=key,
             name=key,
-            description=f"{data.get('namespace', 'industrial')} ontology object type",
+            description=f"{data.get('namespace', 'enterprise')} ontology object type",
             schema={"properties": definition.get("properties", [])},
         )
         db.add(obj)
@@ -37,11 +39,27 @@ def seed_process_safety_ontology(db: Session) -> int:
             AuditEvent(
                 actor_type="system",
                 actor_id="ontology-seeder",
-                action="ontology.seed.process_safety",
+                action=action,
                 target_type="OntologyType",
-                context={"created_types": created, "source": str(ONTOLOGY_PATH.name)},
+                context={"created_types": created, "source": path.name},
             )
         )
         db.commit()
 
     return created
+
+
+def seed_process_safety_ontology(db: Session) -> int:
+    return _seed_ontology_file(
+        db,
+        PROCESS_SAFETY_ONTOLOGY,
+        "ontology.seed.process_safety",
+    )
+
+
+def seed_enterprise_ontology(db: Session) -> int:
+    return _seed_ontology_file(
+        db,
+        ENTERPRISE_ONTOLOGY,
+        "ontology.seed.enterprise",
+    )
