@@ -65,6 +65,30 @@ export const api = {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ object_id: objectId })
   }),
+  recognitionRun: (documentId: string) => request<{ reviewed: number; recognized: number; needs_review: number }>(
+    "/api/v1/engineering/recognition/run",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ document_id: documentId })
+    }
+  ),
+  recognitionApply: (objectId: string, targetTypeKey: string, subtype?: string) => request<OntologyObject>(
+    "/api/v1/engineering/recognition/apply",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ object_id: objectId, target_type_key: targetTypeKey, subtype: subtype || null })
+    }
+  ),
+  connectivityDerive: (documentId: string) => request<{ created_links: number; unresolved_references: number }>(
+    "/api/v1/engineering/connectivity/derive",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ document_id: documentId })
+    }
+  ),
   dexpiImport: (file: File) => {
     const body = new FormData();
     body.append("file", file);
