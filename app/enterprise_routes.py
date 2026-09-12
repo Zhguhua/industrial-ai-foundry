@@ -201,7 +201,7 @@ def download_document_version(
             stream.close()
             stream.release_conn()
 
-    safe_name = version.file_name.replace('"', "").replace("\\r", "").replace("\\n", "")
+    safe_name = version.file_name.replace('"', "").replace("\r", "").replace("\n", "")
     headers = {
         "Content-Disposition": f'attachment; filename="{safe_name}"',
         "Content-Length": str(size),
