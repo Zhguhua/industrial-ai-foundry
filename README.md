@@ -8,6 +8,27 @@ Ontology-centric enterprise AI platform for governed documents, administration, 
 
 ## Current release: v0.5.2 Runnable Enterprise Demo
 
+## Verified public preview
+
+The GitHub Pages preview is built from every push to `main` and now displays its release and short build SHA directly in the UI.
+
+Latest validated end-to-end demo baseline:
+
+- API health: **ok**
+- Workspaces: **3**
+- Documents: **4**
+- Administrative cases: **2**
+- Approvals: **2**
+- Ontology types: **29**
+- Ontology objects: **15**
+- Audit events: **8**
+- PostgreSQL / MinIO / Neo4j demo stack: **validated**
+- GitHub Pages build + deploy: **validated**
+
+Open: https://zhguhua.github.io/industrial-ai-foundry/
+
+
+
 v0.5 extends the platform from industrial intelligence into a broader enterprise knowledge foundation.
 
 ### Enterprise domains

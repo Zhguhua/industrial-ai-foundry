@@ -61,13 +61,21 @@ const processSafetyTypes = [
   "Recommendation", "ActionItem"
 ];
 
+const enterpriseTypes = [
+  "Workspace", "Project", "Document", "DocumentVersion", "AdministrativeCase",
+  "ApprovalTask", "Form", "Deadline", "Person", "Team", "Role"
+];
+
+const previewTypeNames = [...processSafetyTypes, ...enterpriseTypes];
+
 export default function App() {
   const [view, setView] = useState<View>("overview");
   const [types, setTypes] = useState<OntologyType[]>([]);
   const [objects, setObjects] = useState<OntologyObject[]>([]);
   const [audits, setAudits] = useState<AuditEvent[]>([]);
   const [healthy, setHealthy] = useState<boolean | null>(null);
-  const [version, setVersion] = useState("v0.3");
+  const [version, setVersion] = useState("v0.5.2");
+  const buildSha = (import.meta.env.VITE_BUILD_SHA || "local").slice(0, 7);
   const [query, setQuery] = useState("");
   const [busy, setBusy] = useState("");
   const [notice, setNotice] = useState("");
@@ -96,24 +104,43 @@ export default function App() {
 
   useEffect(() => {
     if (previewMode) {
+      const now = new Date().toISOString();
       setHealthy(true);
-      setVersion("v0.4 demo");
-      setTypes(processSafetyTypes.map((name, index) => ({
+      setVersion("v0.5.2 demo");
+      setTypes(previewTypeNames.map((name, index) => ({
         id: "demo-type-" + index,
         key: name,
         name,
-        description: "Public preview ontology type",
+        description: "v0.5.2 public preview ontology type",
         schema: {}
       })));
       setObjects([
-        { id: "demo-p101", type_id: "demo-type-3", external_id: "P-101", name: "P-101 Feed Pump", properties: { engineering_subtype: "Pump" }, classification: "internal", created_at: new Date().toISOString() },
-        { id: "demo-pid", type_id: "demo-type-6", external_id: "PID-1001", name: "P&ID-1001", properties: { revision: "A" }, classification: "internal", created_at: new Date().toISOString() },
-        { id: "demo-node", type_id: "demo-type-9", external_id: "N-12", name: "HAZOP Node N-12", properties: { design_intent: "Feed transfer" }, classification: "internal", created_at: new Date().toISOString() }
+        { id: "demo-site", type_id: "demo-type-0", external_id: "SITE-DEMO", name: "Demo Chemical Site", properties: { country: "DE" }, classification: "internal", created_at: now },
+        { id: "demo-plant", type_id: "demo-type-1", external_id: "PLANT-NORTH", name: "Plant North", properties: {}, classification: "internal", created_at: now },
+        { id: "demo-unit", type_id: "demo-type-2", external_id: "U-100", name: "Feed Preparation Unit", properties: {}, classification: "internal", created_at: now },
+        { id: "demo-p101", type_id: "demo-type-3", external_id: "P-101", name: "P-101 Feed Pump", properties: { engineering_subtype: "Centrifugal Pump", design_pressure: "16 bar" }, classification: "internal", created_at: now },
+        { id: "demo-v101", type_id: "demo-type-3", external_id: "V-101", name: "V-101 Feed Surge Vessel", properties: { engineering_subtype: "Vessel" }, classification: "internal", created_at: now },
+        { id: "demo-ft101", type_id: "demo-type-4", external_id: "FT-101", name: "FT-101 Feed Flow Transmitter", properties: { loop_id: "FIC-101" }, classification: "internal", created_at: now },
+        { id: "demo-fv101", type_id: "demo-type-4", external_id: "FV-101", name: "FV-101 Feed Control Valve", properties: { loop_id: "FIC-101" }, classification: "internal", created_at: now },
+        { id: "demo-pid", type_id: "demo-type-6", external_id: "PID-1001", name: "P&ID 1001 – Feed System", properties: { revision: "C" }, classification: "internal", created_at: now },
+        { id: "demo-study", type_id: "demo-type-8", external_id: "HZ-2026-001", name: "HAZOP Study HZ-2026-001", properties: { methodology: "HAZOP" }, classification: "internal", created_at: now },
+        { id: "demo-node", type_id: "demo-type-9", external_id: "HZ-2026-001-N01", name: "Node 1 – Feed Transfer", properties: { design_intent: "Feed transfer" }, classification: "internal", created_at: now },
+        { id: "demo-dev", type_id: "demo-type-10", external_id: "HZ-2026-001-N01-NOFLOW", name: "No Flow", properties: { guideword: "NO", parameter: "FLOW" }, classification: "internal", created_at: now },
+        { id: "demo-cause", type_id: "demo-type-11", external_id: "HZ-2026-001-C01", name: "P-101 trip", properties: {}, classification: "internal", created_at: now },
+        { id: "demo-consequence", type_id: "demo-type-12", external_id: "HZ-2026-001-CON01", name: "Downstream feed interruption", properties: { severity: "S3" }, classification: "internal", created_at: now },
+        { id: "demo-safeguard", type_id: "demo-type-13", external_id: "HZ-2026-001-SG01", name: "Low-flow alarm FAL-101", properties: { safeguard_type: "alarm" }, classification: "internal", created_at: now },
+        { id: "demo-rec", type_id: "demo-type-16", external_id: "REC-2026-001", name: "Verify low-flow trip requirement", properties: { priority: "High", status: "Open" }, classification: "internal", created_at: now }
       ]);
-      setAudits([
-        { id: "demo-a1", actor_type: "system", actor_id: "demo", action: "engineering.dexpi.import", target_type: "PIDDocument", target_id: "demo-pid", context: {}, created_at: new Date().toISOString() },
-        { id: "demo-a2", actor_type: "agent", actor_id: "pha-copilot", action: "agent.pha.draft", target_type: "Equipment", target_id: "demo-p101", context: {}, created_at: new Date().toISOString() }
-      ]);
+      setAudits(Array.from({ length: 8 }, (_, index) => ({
+        id: "demo-a" + (index + 1),
+        actor_type: index % 3 === 0 ? "agent" : "system",
+        actor_id: index % 3 === 0 ? "pha-copilot" : "demo-seed",
+        action: ["demo.seed.complete", "enterprise.document.binary.upload", "demo.graph.project", "agent.pha.draft"][index % 4],
+        target_type: index % 2 === 0 ? "Platform" : "DocumentVersion",
+        target_id: "demo-" + (index + 1),
+        context: { release: "0.5.2", build: buildSha },
+        created_at: now
+      })));
       return;
     }
     api.health()
@@ -250,7 +277,7 @@ export default function App() {
         <div className="sidebar-footer">
           <div className="status-row">
             <span className={healthy ? "status-dot online" : "status-dot"} />
-            <div><strong>{healthy === false ? t("offline") : t("online")}</strong><span>{version} Engineering Semantics</span></div>
+            <div><strong>{healthy === false ? t("offline") : t("online")}</strong><span>{version} · {buildSha} · Engineering Semantics</span></div>
           </div>
         </div>
       </aside>
@@ -277,6 +304,11 @@ export default function App() {
                   <p className="eyebrow">{t("heroEyebrow").toUpperCase()}</p>
                   <h2>{t("heroTitle")}</h2>
                   <p className="hero-copy">{t("heroCopy")}</p>
+                  <div className="release-strip">
+                    <span>v0.5.2 Runnable Enterprise Demo</span>
+                    <code>build {buildSha}</code>
+                    <span>3 workspaces · 4 documents · 2 cases · 2 approvals · 15 objects</span>
+                  </div>
                   <div className="hero-actions">
                     <button className="primary" onClick={() => setView("engineering")}>{t("importEngineering")}</button>
                     <button className="secondary" onClick={() => setView("agents")}>{t("runPHA")}</button>
