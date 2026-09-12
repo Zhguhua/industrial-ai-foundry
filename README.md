@@ -1,3 +1,5 @@
+[![Deploy public UI preview](https://github.com/Zhguhua/industrial-ai-foundry/actions/workflows/pages.yml/badge.svg)](https://github.com/Zhguhua/industrial-ai-foundry/actions/workflows/pages.yml)
+
 # Industrial AI Foundry
 
 Private ontology-centric enterprise AI platform for industrial data, engineering knowledge, process safety, governed AI agents and auditable workflows.
