@@ -42,7 +42,12 @@ export type PHADraft = {
   };
 };
 
+const isPagesDemo = import.meta.env.MODE === "pages";
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  if (isPagesDemo) {
+    throw new Error("Public preview runs in demo mode without backend access.");
+  }
   const response = await fetch(path, init);
   if (!response.ok) {
     const detail = await response.text();
@@ -50,6 +55,8 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   }
   return response.json();
 }
+
+export const previewMode = isPagesDemo;
 
 export const api = {
   health: () => request<{ status: string; service: string; version: string }>("/health"),
