@@ -4,7 +4,7 @@ Private ontology-centric enterprise AI platform for industrial data, engineering
 
 > Independent implementation based on general enterprise ontology and governed-AI architecture patterns. No proprietary Palantir code, assets, trade secrets or copied UI are used.
 
-## Current release: v0.3 Industrial Intelligence
+## Current release: v0.4 Engineering Semantics
 
 v0.3 moves the project from a console prototype into an operational industrial intelligence pipeline.
 
@@ -182,7 +182,15 @@ Audit Event
 - governed PHA Copilot
 - operational engineering/agent UI
 
-### v0.4 — Engineering Semantics
+### v0.4 — Engineering Semantics ✅
+- rule-based DEXPI semantic recognition
+- confidence-based recognition review state
+- engineer-confirmed type correction API
+- CONNECTED_TO / FEEDS / MEASURES / CONTROLS semantics
+- XML-reference connectivity derivation
+- engineering semantics console workbench
+
+### v0.4.1 — Recognition Review
 Next:
 - DEXPI class-to-ontology mapping
 - equipment/instrument recognition
