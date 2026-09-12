@@ -14,12 +14,15 @@ from app.schemas import (
     OntologyObjectCreate,
     OntologyTypeCreate,
     PHADraftRequest,
+    DocumentRequest,
+    RecognitionApplyRequest,
 )
 from app.seed import seed_process_safety_ontology
+from app.semantics import apply_recognition, derive_connectivity, recognize_document
 
 app = FastAPI(
     title=settings.app_name,
-    version="0.3.0",
+    version="0.4.0",
     description="Governed ontology-centric industrial AI platform",
 )
 
@@ -47,7 +50,7 @@ def startup() -> None:
 
 @app.get("/health")
 def health() -> dict:
-    return {"status": "ok", "service": settings.app_name, "version": "0.3.0"}
+    return {"status": "ok", "service": settings.app_name, "version": "0.4.0"}
 
 
 @app.get("/api/v1/ontology/types")
@@ -191,3 +194,38 @@ def pha_draft(payload: PHADraftRequest, db: Session = Depends(get_db)):
         return PHACopilot().propose_hazop_draft(db, payload.object_id)
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@app.post("/api/v1/engineering/recognition/run")
+def run_recognition(payload: DocumentRequest, db: Session = Depends(get_db)):
+    if not db.get(OntologyObject, payload.document_id):
+        raise HTTPException(status_code=404, detail="PID document not found")
+    try:
+        result = recognize_document(db, payload.document_id)
+        return {
+            "reviewed": result.reviewed,
+            "recognized": result.recognized,
+            "needs_review": result.needs_review,
+        }
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.post("/api/v1/engineering/recognition/apply")
+def confirm_recognition(payload: RecognitionApplyRequest, db: Session = Depends(get_db)):
+    try:
+        return apply_recognition(
+            db,
+            payload.object_id,
+            payload.target_type_key,
+            payload.subtype,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.post("/api/v1/engineering/connectivity/derive")
+def build_connectivity(payload: DocumentRequest, db: Session = Depends(get_db)):
+    if not db.get(OntologyObject, payload.document_id):
+        raise HTTPException(status_code=404, detail="PID document not found")
+    return derive_connectivity(db, payload.document_id)
