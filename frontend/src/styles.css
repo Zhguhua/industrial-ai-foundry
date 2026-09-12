@@ -212,3 +212,19 @@ nav { display: grid; gap: 4px; }
   .ingest-grid, .agent-runner { grid-template-columns: 1fr; }
   .graph-architecture { grid-template-columns: repeat(4, 180px); }
 }
+
+.semantics-workbench {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) minmax(220px, .8fr) auto auto;
+  gap: 10px;
+  align-items: center;
+  border: 1px solid #263650;
+  background: #0e1725;
+  border-radius: 9px;
+  padding: 16px;
+}
+.semantics-workbench strong { font-size: 12px; }
+.semantics-workbench p { margin: 4px 0 0; font-size: 9px; }
+.semantics-workbench select { min-height: 38px; border: 1px solid #2b3b55; background: #0b1320; color: inherit; border-radius: 7px; padding: 0 9px; }
+@media (max-width: 1050px) { .semantics-workbench { grid-template-columns: 1fr; } }
