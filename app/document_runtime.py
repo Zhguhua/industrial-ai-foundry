@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 
 from sqlalchemy.orm import Session
 
@@ -8,6 +9,9 @@ from app.enterprise_models import DocumentRecord, DocumentVersion
 from app.models import AuditEvent
 from app.document_extraction import extract_document_metadata
 from app.storage import object_storage
+from app.config import settings
+
+ALLOWED_DOCUMENT_EXTENSIONS = {".pdf", ".docx", ".xlsx", ".csv"}
 
 
 @dataclass
@@ -29,6 +33,11 @@ def upload_document_version(
         raise ValueError("Document not found")
     if not content:
         raise ValueError("Uploaded file is empty")
+    if len(content) > settings.document_max_upload_bytes:
+        raise ValueError("Uploaded file exceeds configured size limit")
+    suffix = Path(file_name).suffix.lower()
+    if suffix not in ALLOWED_DOCUMENT_EXTENSIONS:
+        raise ValueError("Unsupported document format; allowed: PDF, DOCX, XLSX, CSV")
 
     stored = object_storage.put_bytes(
         content=content,
