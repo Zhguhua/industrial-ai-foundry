@@ -329,7 +329,6 @@ export default function App() {
                   {busy === "connectivity" ? "Building..." : "Derive Connectivity"}
                 </button>
               </div>
-                            </div>
             </Panel>
           )}
 
