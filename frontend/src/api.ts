@@ -27,6 +27,57 @@ export type AuditEvent = {
   created_at: string;
 };
 
+export type Workspace = {
+  id: string;
+  key: string;
+  name: string;
+  description?: string | null;
+  status: string;
+  created_at: string;
+};
+
+export type EnterpriseDocument = {
+  id: string;
+  workspace_id: string;
+  title: string;
+  document_type: string;
+  status: string;
+  classification: string;
+  owner?: string | null;
+  metadata_json: Record<string, unknown>;
+  current_version: number;
+  created_at: string;
+  updated_at: string;
+};
+
+export type AdministrativeCase = {
+  id: string;
+  workspace_id: string;
+  case_no: string;
+  title: string;
+  case_type: string;
+  status: string;
+  owner?: string | null;
+  due_date?: string | null;
+  attributes: Record<string, unknown>;
+  created_at: string;
+};
+
+export type ApprovalTask = {
+  id: string;
+  workspace_id: string;
+  target_type: string;
+  target_id: string;
+  title: string;
+  status: string;
+  approver_role: string;
+  assignee?: string | null;
+  due_date?: string | null;
+  decision?: string | null;
+  rationale?: string | null;
+  created_at: string;
+};
+
 export type PHADraft = {
   agent: string;
   status: string;
@@ -63,6 +114,16 @@ export const api = {
   ontologyTypes: () => request<OntologyType[]>("/api/v1/ontology/types"),
   ontologyObjects: () => request<OntologyObject[]>("/api/v1/ontology/objects"),
   audits: () => request<AuditEvent[]>("/api/v1/audit/events"),
+  workspaces: () => request<Workspace[]>("/api/v1/enterprise/workspaces"),
+  documents: (workspaceId?: string) => request<EnterpriseDocument[]>(
+    "/api/v1/enterprise/documents" + (workspaceId ? "?workspace_id=" + encodeURIComponent(workspaceId) : "")
+  ),
+  administrativeCases: (workspaceId?: string) => request<AdministrativeCase[]>(
+    "/api/v1/enterprise/admin/cases" + (workspaceId ? "?workspace_id=" + encodeURIComponent(workspaceId) : "")
+  ),
+  approvals: (workspaceId?: string) => request<ApprovalTask[]>(
+    "/api/v1/enterprise/approvals" + (workspaceId ? "?workspace_id=" + encodeURIComponent(workspaceId) : "")
+  ),
   graphProject: () => request<{ objects_projected: number; links_projected: number }>(
     "/api/v1/graph/project",
     { method: "POST" }

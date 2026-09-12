@@ -7,6 +7,7 @@ from app.config import settings
 from app.db import Base, SessionLocal, engine, get_db
 from app.dexpi import import_dexpi_xml
 from app.graph import GraphService
+from app.enterprise_routes import router as enterprise_router
 from app.models import AuditEvent, OntologyLink, OntologyObject, OntologyType
 from app.schemas import (
     GraphNeighborhoodRequest,
@@ -17,14 +18,16 @@ from app.schemas import (
     DocumentRequest,
     RecognitionApplyRequest,
 )
-from app.seed import seed_process_safety_ontology
+from app.seed import seed_enterprise_ontology, seed_process_safety_ontology
 from app.semantics import apply_recognition, derive_connectivity, recognize_document
 
 app = FastAPI(
     title=settings.app_name,
-    version="0.4.0",
+    version="0.5.0",
     description="Governed ontology-centric industrial AI platform",
 )
+
+app.include_router(enterprise_router)
 
 app.add_middleware(
     CORSMiddleware,
@@ -44,13 +47,14 @@ def startup() -> None:
     db = SessionLocal()
     try:
         seed_process_safety_ontology(db)
+        seed_enterprise_ontology(db)
     finally:
         db.close()
 
 
 @app.get("/health")
 def health() -> dict:
-    return {"status": "ok", "service": settings.app_name, "version": "0.4.0"}
+    return {"status": "ok", "service": settings.app_name, "version": "0.5.0"}
 
 
 @app.get("/api/v1/ontology/types")

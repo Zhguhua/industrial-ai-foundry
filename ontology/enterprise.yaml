@@ -1,0 +1,40 @@
+version: 0.5
+namespace: enterprise.foundation
+
+object_types:
+  Workspace:
+    properties: [key, name, description, status]
+  Project:
+    properties: [project_no, name, status, owner, start_date, end_date]
+  Document:
+    properties: [title, document_type, status, classification, owner, current_version]
+  DocumentVersion:
+    properties: [version_no, file_name, mime_type, checksum, storage_uri, created_by]
+  AdministrativeCase:
+    properties: [case_no, title, case_type, status, owner, due_date]
+  ApprovalTask:
+    properties: [title, status, approver_role, assignee, due_date, decision]
+  Form:
+    properties: [name, form_type, revision, status]
+  Deadline:
+    properties: [title, due_date, status, owner]
+  Person:
+    properties: [display_name, department, email, status]
+  Team:
+    properties: [name, department, status]
+  Role:
+    properties: [name, scope, permissions]
+
+link_types:
+  BELONGS_TO_WORKSPACE: {source: Document, target: Workspace}
+  VERSION_OF: {source: DocumentVersion, target: Document}
+  CASE_IN_WORKSPACE: {source: AdministrativeCase, target: Workspace}
+  REQUIRES_APPROVAL: {source: Document, target: ApprovalTask}
+  CASE_REQUIRES_APPROVAL: {source: AdministrativeCase, target: ApprovalTask}
+  ASSIGNED_TO_PERSON: {source: ApprovalTask, target: Person}
+  ASSIGNED_TO_TEAM: {source: AdministrativeCase, target: Team}
+  HAS_DEADLINE: {source: AdministrativeCase, target: Deadline}
+  USES_FORM: {source: AdministrativeCase, target: Form}
+  DOCUMENTS_EQUIPMENT: {source: Document, target: Equipment}
+  DOCUMENTS_PHA: {source: Document, target: PHAStudy}
+  SUPPORTS_ACTION: {source: Document, target: ActionItem}
