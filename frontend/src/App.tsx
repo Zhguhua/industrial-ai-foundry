@@ -15,7 +15,7 @@ import {
   Workflow,
   Wrench
 } from "lucide-react";
-import { api, AuditEvent, OntologyObject, OntologyType, PHADraft } from "./api";
+import { api, AuditEvent, OntologyObject, OntologyType, PHADraft, previewMode } from "./api";
 
 type View =
   | "overview"
@@ -72,6 +72,27 @@ export default function App() {
   };
 
   useEffect(() => {
+    if (previewMode) {
+      setHealthy(true);
+      setVersion("v0.4 demo");
+      setTypes(processSafetyTypes.map((name, index) => ({
+        id: "demo-type-" + index,
+        key: name,
+        name,
+        description: "Public preview ontology type",
+        schema: {}
+      })));
+      setObjects([
+        { id: "demo-p101", type_id: "demo-type-3", external_id: "P-101", name: "P-101 Feed Pump", properties: { engineering_subtype: "Pump" }, classification: "internal", created_at: new Date().toISOString() },
+        { id: "demo-pid", type_id: "demo-type-6", external_id: "PID-1001", name: "P&ID-1001", properties: { revision: "A" }, classification: "internal", created_at: new Date().toISOString() },
+        { id: "demo-node", type_id: "demo-type-9", external_id: "N-12", name: "HAZOP Node N-12", properties: { design_intent: "Feed transfer" }, classification: "internal", created_at: new Date().toISOString() }
+      ]);
+      setAudits([
+        { id: "demo-a1", actor_type: "system", actor_id: "demo", action: "engineering.dexpi.import", target_type: "PIDDocument", target_id: "demo-pid", context: {}, created_at: new Date().toISOString() },
+        { id: "demo-a2", actor_type: "agent", actor_id: "pha-copilot", action: "agent.pha.draft", target_type: "Equipment", target_id: "demo-p101", context: {}, created_at: new Date().toISOString() }
+      ]);
+      return;
+    }
     api.health()
       .then((health) => {
         setHealthy(true);
@@ -145,6 +166,10 @@ export default function App() {
   );
 
   const projectGraph = async () => {
+    if (previewMode) {
+      setNotice("Public preview: Neo4j projection is disabled in demo mode.");
+      return;
+    }
     setBusy("graph");
     setNotice("");
     try {
@@ -159,6 +184,20 @@ export default function App() {
   };
 
   const runPHADraft = async () => {
+    if (previewMode) {
+      setPhaDraft({
+        agent: "pha-copilot",
+        status: "demo",
+        candidate_deviations: [
+          { guideword: "NO", parameter: "FLOW", question: "What credible causes could produce no flow at P-101?" },
+          { guideword: "MORE", parameter: "PRESSURE", question: "What conditions could cause high pressure involving P-101?" },
+          { guideword: "REVERSE", parameter: "FLOW", question: "Could reverse flow occur and what would be the consequence?" }
+        ],
+        governance: { write_allowed: false, human_approval_required: true, note: "Demo only" }
+      });
+      setNotice("Public preview: sample PHA Copilot draft generated locally.");
+      return;
+    }
     if (!selectedObjectId) return;
     setBusy("pha");
     setNotice("");
@@ -175,6 +214,11 @@ export default function App() {
   };
 
   const importDexpi = async (event: ChangeEvent<HTMLInputElement>) => {
+    if (previewMode) {
+      setNotice("Public preview: file upload is disabled. Use Codespaces or local deployment for live ingestion.");
+      event.target.value = "";
+      return;
+    }
     const file = event.target.files?.[0];
     if (!file) return;
     setBusy("dexpi");
@@ -224,6 +268,7 @@ export default function App() {
           </div>
         </header>
 
+        {previewMode && <div className="notice">Public demo mode — UI only. Backend, uploads and private data are not exposed.</div>}
         {notice && <div className="notice">{notice}</div>}
 
         <section className="content">
