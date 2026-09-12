@@ -3,9 +3,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
 from app.config import settings
-from app.db import Base, engine, get_db
+from app.db import Base, SessionLocal, engine, get_db
 from app.models import AuditEvent, OntologyLink, OntologyObject, OntologyType
 from app.schemas import OntologyLinkCreate, OntologyObjectCreate, OntologyTypeCreate
+from app.seed import seed_process_safety_ontology
 
 app = FastAPI(
     title=settings.app_name,
@@ -28,6 +29,11 @@ app.add_middleware(
 @app.on_event("startup")
 def startup() -> None:
     Base.metadata.create_all(bind=engine)
+    db = SessionLocal()
+    try:
+        seed_process_safety_ontology(db)
+    finally:
+        db.close()
 
 
 @app.get("/health")
@@ -37,7 +43,7 @@ def health() -> dict:
 
 @app.get("/api/v1/ontology/types")
 def list_types(db: Session = Depends(get_db)):
-    return db.query(OntologyType).all()
+    return db.query(OntologyType).order_by(OntologyType.name.asc()).all()
 
 
 @app.post("/api/v1/ontology/types")
