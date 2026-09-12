@@ -25,21 +25,9 @@ jobs:
       - name: Wait for demo seed
         run: |
           set -e
-          for i in $(seq 1 90); do
-            if docker compose ps demo-seed --format json | grep -q '"ExitCode":0'; then
-              echo "Demo seed completed successfully"
-              exit 0
-            fi
-            if docker compose ps demo-seed --format json | grep -q '"State":"exited"'; then
-              echo "Demo seed exited unsuccessfully"
-              docker compose logs demo-seed api postgres neo4j minio
-              exit 1
-            fi
-            sleep 2
-          done
-          echo "Timed out waiting for demo seed"
-          docker compose logs demo-seed api postgres neo4j minio
-          exit 1
+          docker compose wait demo-seed
+          echo "Demo seed completed successfully"
+          docker compose logs --no-color demo-seed
 
       - name: Run smoke test
         run: python scripts/smoke-test.py
