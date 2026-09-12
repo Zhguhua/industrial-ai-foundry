@@ -27,15 +27,52 @@ export type AuditEvent = {
   created_at: string;
 };
 
-async function request<T>(path: string): Promise<T> {
-  const response = await fetch(path);
-  if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+export type PHADraft = {
+  agent: string;
+  status: string;
+  candidate_deviations: Array<{
+    guideword: string;
+    parameter: string;
+    question: string;
+  }>;
+  governance: {
+    write_allowed: boolean;
+    human_approval_required: boolean;
+    note: string;
+  };
+};
+
+async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const response = await fetch(path, init);
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error(detail || `Request failed: ${response.status}`);
+  }
   return response.json();
 }
 
 export const api = {
-  health: () => request<{ status: string; service: string }>("/health"),
+  health: () => request<{ status: string; service: string; version: string }>("/health"),
   ontologyTypes: () => request<OntologyType[]>("/api/v1/ontology/types"),
   ontologyObjects: () => request<OntologyObject[]>("/api/v1/ontology/objects"),
-  audits: () => request<AuditEvent[]>("/api/v1/audit/events")
+  audits: () => request<AuditEvent[]>("/api/v1/audit/events"),
+  graphProject: () => request<{ objects_projected: number; links_projected: number }>(
+    "/api/v1/graph/project",
+    { method: "POST" }
+  ),
+  phaDraft: (objectId: string) => request<PHADraft>("/api/v1/agents/pha/draft", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ object_id: objectId })
+  }),
+  dexpiImport: (file: File) => {
+    const body = new FormData();
+    body.append("file", file);
+    return request<{
+      document_id: string;
+      created_objects: number;
+      created_links: number;
+      discovered_classes: string[];
+    }>("/api/v1/engineering/dexpi/import", { method: "POST", body });
+  }
 };
