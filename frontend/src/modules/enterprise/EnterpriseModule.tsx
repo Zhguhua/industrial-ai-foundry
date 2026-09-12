@@ -30,6 +30,14 @@ const demoWorkspaces: Workspace[] = [
     description: "Administrative cases, controlled documents and approvals",
     status: "active",
     created_at: new Date().toISOString()
+  },
+  {
+    id: "ws-demo-3",
+    key: "project-feed-upgrade",
+    name: "Feed System Upgrade 2026",
+    description: "Engineering change project for the P-101 feed train",
+    status: "active",
+    created_at: new Date().toISOString()
   }
 ];
 
@@ -49,14 +57,40 @@ const demoDocuments: EnterpriseDocument[] = [
   },
   {
     id: "doc-demo-2",
+    workspace_id: "ws-demo-1",
+    title: "HAZOP Study HZ-2026-001",
+    document_type: "PHA",
+    status: "approved",
+    classification: "confidential",
+    owner: "Process Safety",
+    metadata_json: { revision: "1" },
+    current_version: 1,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: "doc-demo-3",
     workspace_id: "ws-demo-2",
     title: "Administrative Procedure AP-014",
     document_type: "Procedure",
     status: "review",
     classification: "internal",
     owner: "Administration",
-    metadata_json: {},
+    metadata_json: { revision: "5" },
     current_version: 5,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: "doc-demo-4",
+    workspace_id: "ws-demo-3",
+    title: "PHA Action Register – Feed Upgrade",
+    document_type: "Action Register",
+    status: "working",
+    classification: "internal",
+    owner: "Project Management",
+    metadata_json: {},
+    current_version: 1,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
   }
@@ -67,12 +101,24 @@ const demoCases: AdministrativeCase[] = [
     id: "case-demo-1",
     workspace_id: "ws-demo-2",
     case_no: "ADM-2026-0042",
-    title: "Change approval for controlled procedure",
-    case_type: "change_request",
+    title: "Controlled procedure revision AP-014",
+    case_type: "document_change",
     status: "open",
     owner: "Administration",
-    due_date: new Date(Date.now() + 7 * 86400000).toISOString(),
-    attributes: {},
+    due_date: new Date(Date.now() + 10 * 86400000).toISOString(),
+    attributes: { priority: "normal" },
+    created_at: new Date().toISOString()
+  },
+  {
+    id: "case-demo-2",
+    workspace_id: "ws-demo-3",
+    case_no: "MOC-2026-017",
+    title: "Feed system upgrade management of change",
+    case_type: "management_of_change",
+    status: "open",
+    owner: "Project Management",
+    due_date: new Date(Date.now() + 21 * 86400000).toISOString(),
+    attributes: { risk_level: "medium", requires_pha: true },
     created_at: new Date().toISOString()
   }
 ];
@@ -82,12 +128,26 @@ const demoApprovals: ApprovalTask[] = [
     id: "approval-demo-1",
     workspace_id: "ws-demo-2",
     target_type: "Document",
-    target_id: "doc-demo-2",
+    target_id: "doc-demo-3",
     title: "Approve AP-014 revision 5",
     status: "pending",
     approver_role: "document_controller",
     assignee: "Document Control",
     due_date: new Date(Date.now() + 3 * 86400000).toISOString(),
+    decision: null,
+    rationale: null,
+    created_at: new Date().toISOString()
+  },
+  {
+    id: "approval-demo-2",
+    workspace_id: "ws-demo-3",
+    target_type: "AdministrativeCase",
+    target_id: "case-demo-2",
+    title: "Technical approval for MOC-2026-017",
+    status: "pending",
+    approver_role: "process_safety",
+    assignee: "Process Safety",
+    due_date: new Date(Date.now() + 7 * 86400000).toISOString(),
     decision: null,
     rationale: null,
     created_at: new Date().toISOString()

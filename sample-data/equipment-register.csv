@@ -1,0 +1,5 @@
+tag,type,service,status
+P-101,Pump,Feed transfer,In service
+V-101,Vessel,Feed surge,In service
+FT-101,Flow transmitter,Feed flow,In service
+FV-101,Control valve,Feed control,In service

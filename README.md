@@ -6,7 +6,7 @@ Ontology-centric enterprise AI platform for governed documents, administration, 
 
 > Independent implementation based on general enterprise ontology and governed-AI architecture patterns. No proprietary Palantir code, assets, trade secrets or copied UI are used.
 
-## Current release: v0.5.1 Document Runtime
+## Current release: v0.5.2 Runnable Enterprise Demo
 
 v0.5 extends the platform from industrial intelligence into a broader enterprise knowledge foundation.
 
@@ -101,6 +101,42 @@ Documents can be semantically linked to Equipment, P&IDs, PHA studies and action
 - responsive mobile UI
 - GitHub Pages public demo
 
+## Complete sample data
+
+v0.5.2 ships an idempotent demo bootstrap with:
+
+- 3 enterprise workspaces
+- 4 governed documents with real MinIO binaries
+- PDF / DOCX / XLSX / CSV sample content
+- 2 administrative cases
+- 2 approval tasks
+- example workspace roles
+- engineering/process-safety ontology objects
+- P-101 / V-101 / FT-101 / FV-101 example equipment and instrumentation
+- HAZOP study, node, deviation, cause, consequence, safeguard and recommendation
+- Neo4j projection
+- audit events
+
+### Fast start on Windows
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\start-demo.ps1
+```
+
+### Fast start on macOS / Linux
+
+```bash
+bash scripts/start-demo.sh
+```
+
+Then run:
+
+```bash
+python scripts/smoke-test.py
+```
+
+See [docs/RUNNABLE_DEMO.md](docs/RUNNABLE_DEMO.md) for the full guide.
+
 ## Run locally
 
 ```bash
@@ -175,6 +211,17 @@ DEXPI recognition, confidence review state and connectivity derivation.
 - Document Center version upload UI
 
 Document binaries are not stored in PostgreSQL. MinIO stores binary content while PostgreSQL remains the governed metadata/version system of record.
+
+### v0.5.2 — Runnable Enterprise Demo ✅
+- idempotent end-to-end sample data
+- sample PDF / DOCX / XLSX / CSV binaries
+- example administration and approval flows
+- engineering / process-safety sample graph
+- automatic Neo4j projection
+- Docker Compose service health orchestration
+- Windows and shell start scripts
+- smoke-test script
+- CI build validation
 
 ### v0.6 — Enterprise Retrieval & Governance
 Planned:
