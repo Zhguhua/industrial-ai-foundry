@@ -1,0 +1,41 @@
+{
+  "name": "Industrial AI Foundry Preview",
+  "image": "mcr.microsoft.com/devcontainers/python:3.12",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+  "forwardPorts": [5173, 8000, 7474, 9001],
+  "portsAttributes": {
+    "5173": {
+      "label": "Industrial AI Foundry",
+      "onAutoForward": "openPreview",
+      "visibility": "private"
+    },
+    "8000": {
+      "label": "FastAPI",
+      "onAutoForward": "notify",
+      "visibility": "private"
+    },
+    "7474": {
+      "label": "Neo4j Browser",
+      "onAutoForward": "silent",
+      "visibility": "private"
+    },
+    "9001": {
+      "label": "MinIO Console",
+      "onAutoForward": "silent",
+      "visibility": "private"
+    }
+  },
+  "postCreateCommand": "bash scripts/codespace-start.sh",
+  "postStartCommand": "bash scripts/codespace-start.sh",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-azuretools.vscode-docker",
+        "dbaeumer.vscode-eslint"
+      ]
+    }
+  }
+}
