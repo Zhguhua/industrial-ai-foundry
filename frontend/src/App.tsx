@@ -16,13 +16,20 @@ import {
   Wrench,
   Globe2,
   Moon,
-  Sun
+  Sun,
+  FolderKanban,
+  FileText,
+  ClipboardList
 } from "lucide-react";
 import { api, AuditEvent, OntologyObject, OntologyType, PHADraft, previewMode } from "./api";
 import { Language, translate } from "./i18n";
+import { EnterpriseModule } from "./modules/enterprise/EnterpriseModule";
 
 type View =
   | "overview"
+  | "workspaces"
+  | "documents"
+  | "administration"
   | "engineering"
   | "ontology"
   | "objects"
@@ -32,8 +39,11 @@ type View =
   | "policies"
   | "audit";
 
-const nav: Array<{ id: View; labelKey: "overview" | "engineering" | "ontology" | "objects" | "graph" | "agents" | "workflows" | "policies" | "audit"; icon: typeof Activity }> = [
+const nav: Array<{ id: View; labelKey: "overview" | "workspaces" | "documents" | "administration" | "engineering" | "ontology" | "objects" | "graph" | "agents" | "workflows" | "policies" | "audit"; icon: typeof Activity }> = [
   { id: "overview", labelKey: "overview", icon: Activity },
+  { id: "workspaces", labelKey: "workspaces", icon: FolderKanban },
+  { id: "documents", labelKey: "documents", icon: FileText },
+  { id: "administration", labelKey: "administration", icon: ClipboardList },
   { id: "engineering", labelKey: "engineering", icon: Database },
   { id: "ontology", labelKey: "ontology", icon: Braces },
   { id: "objects", labelKey: "objects", icon: Box },
@@ -304,6 +314,18 @@ export default function App() {
                 </Panel>
               </div>
             </>
+          )}
+
+          {view === "workspaces" && (
+            <EnterpriseModule view="workspaces" t={t} />
+          )}
+
+          {view === "documents" && (
+            <EnterpriseModule view="documents" t={t} />
+          )}
+
+          {view === "administration" && (
+            <EnterpriseModule view="administration" t={t} />
           )}
 
           {view === "engineering" && (
