@@ -59,6 +59,7 @@ export default function App() {
   const [notice, setNotice] = useState("");
   const [phaDraft, setPhaDraft] = useState<PHADraft | null>(null);
   const [selectedObjectId, setSelectedObjectId] = useState("");
+  const [selectedDocumentId, setSelectedDocumentId] = useState("");
 
   const reload = () => {
     api.ontologyTypes().then(setTypes).catch(() => setTypes([]));
@@ -78,6 +79,37 @@ export default function App() {
       .catch(() => setHealthy(false));
     reload();
   }, []);
+
+  const pidTypeId = types.find((item) => item.key === "PIDDocument")?.id;
+  const pidDocuments = objects.filter((item) => item.type_id === pidTypeId);
+
+  const runRecognition = async () => {
+    if (!selectedDocumentId) return;
+    setBusy("recognition");
+    try {
+      const result = await api.recognitionRun(selectedDocumentId);
+      setNotice(`Recognition reviewed ${result.reviewed} nodes: ${result.recognized} auto-recognized, ${result.needs_review} need engineer review.`);
+      reload();
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Recognition failed");
+    } finally {
+      setBusy("");
+    }
+  };
+
+  const deriveConnectivity = async () => {
+    if (!selectedDocumentId) return;
+    setBusy("connectivity");
+    try {
+      const result = await api.connectivityDerive(selectedDocumentId);
+      setNotice(`Connectivity derived: ${result.created_links} links; ${result.unresolved_references} unresolved references.`);
+      reload();
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Connectivity derivation failed");
+    } finally {
+      setBusy("");
+    }
+  };
 
   const filteredObjects = useMemo(
     () => objects.filter((item) => item.name.toLowerCase().includes(query.toLowerCase())),
@@ -150,7 +182,7 @@ export default function App() {
         <div className="sidebar-footer">
           <div className="status-row">
             <span className={healthy ? "status-dot online" : "status-dot"} />
-            <div><strong>{healthy === false ? "API offline" : "Platform online"}</strong><span>{version} Industrial Intelligence</span></div>
+            <div><strong>{healthy === false ? "API offline" : "Platform online"}</strong><span>{version} Engineering Semantics</span></div>
           </div>
         </div>
       </aside>
@@ -231,9 +263,26 @@ export default function App() {
                   <span>✓ DEXPI identifiers converted to ontology external IDs</span>
                   <span>✓ Raw attributes preserved for future mapping rules</span>
                   <span>✓ Import action written to audit log</span>
-                  <span>○ Equipment / Instrument class mapping is next</span>
-                  <span>○ Connectivity derivation is next</span>
+                  <span>✓ Rule-based Equipment / Instrument recognition</span>
+                  <span>✓ Confidence-based engineer review state</span>
+                  <span>✓ XML-reference connectivity derivation</span>
                 </div>
+              </div>
+              <div className="semantics-workbench">
+                <div>
+                  <strong>Engineering Semantics</strong>
+                  <p>Select an imported P&ID document, infer semantic classes, then derive traceable connectivity.</p>
+                </div>
+                <select value={selectedDocumentId} onChange={(e) => setSelectedDocumentId(e.target.value)}>
+                  <option value="">Select PID document</option>
+                  {pidDocuments.map((doc) => <option value={doc.id} key={doc.id}>{doc.name}</option>)}
+                </select>
+                <button className="secondary" onClick={runRecognition} disabled={!selectedDocumentId || busy === "recognition"}>
+                  {busy === "recognition" ? "Recognizing..." : "Run Recognition"}
+                </button>
+                <button className="primary" onClick={deriveConnectivity} disabled={!selectedDocumentId || busy === "connectivity"}>
+                  {busy === "connectivity" ? "Building..." : "Derive Connectivity"}
+                </button>
               </div>
             </Panel>
           )}
