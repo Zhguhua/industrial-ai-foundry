@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     minio_secure: bool = False
     minio_document_bucket: str = "enterprise-documents"
     document_max_upload_bytes: int = 52_428_800
+    demo_data_enabled: bool = True
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
