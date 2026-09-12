@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   AdministrativeCase,
   ApprovalTask,
@@ -245,7 +245,7 @@ function EnterpriseMetric({
   label,
   value
 }: {
-  icon: React.ReactNode;
+  icon: ReactNode;
   label: string;
   value: number;
 }) {
@@ -265,7 +265,7 @@ function EnterprisePanel({
 }: {
   title: string;
   subtitle: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
     <section className="panel enterprise-panel">
