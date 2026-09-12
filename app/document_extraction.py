@@ -35,8 +35,7 @@ def extract_document_metadata(
     try:
         if suffix == ".pdf":
             reader = PdfReader(io.BytesIO(content))
-            text = "
-".join(page.extract_text() or "" for page in reader.pages)
+            text = "\n".join(page.extract_text() or "" for page in reader.pages)
             result.update(
                 {
                     "extractor": "pypdf",
@@ -46,8 +45,7 @@ def extract_document_metadata(
             )
         elif suffix == ".docx":
             doc = DocxDocument(io.BytesIO(content))
-            text = "
-".join(paragraph.text for paragraph in doc.paragraphs)
+            text = "\n".join(paragraph.text for paragraph in doc.paragraphs)
             result.update(
                 {
                     "extractor": "python-docx",
@@ -73,8 +71,7 @@ def extract_document_metadata(
                     "extractor": "openpyxl",
                     "sheet_count": len(wb.sheetnames),
                     "row_count_scanned": row_count,
-                    "text_preview": _truncate("
-".join(parts)),
+                    "text_preview": _truncate("\n".join(parts)),
                 }
             )
         elif suffix == ".csv":
@@ -91,8 +88,7 @@ def extract_document_metadata(
                 {
                     "extractor": "csv",
                     "row_count_scanned": row_count,
-                    "text_preview": _truncate("
-".join(rows)),
+                    "text_preview": _truncate("\n".join(rows)),
                 }
             )
     except Exception as exc:
