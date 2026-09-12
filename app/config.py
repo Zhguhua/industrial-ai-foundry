@@ -9,6 +9,11 @@ class Settings(BaseSettings):
     neo4j_user: str = "neo4j"
     neo4j_password: str = "change-me"
     redis_url: str = "redis://redis:6379/0"
+    minio_endpoint: str = "minio:9000"
+    minio_access_key: str = "foundry"
+    minio_secret_key: str = "change-me"
+    minio_secure: bool = False
+    minio_document_bucket: str = "enterprise-documents"
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
