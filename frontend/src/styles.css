@@ -374,3 +374,133 @@ nav { display: grid; gap: 4px; }
   .workflow-canvas { padding: 30px 2px; }
   .semantics-workbench { padding: 12px; }
 }
+
+
+/* v0.5 Enterprise Knowledge Foundation */
+.enterprise-module { display: grid; gap: 18px; }
+.enterprise-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+.enterprise-metric {
+  border: 1px solid #202d42;
+  background: #0e1522;
+  border-radius: 9px;
+  padding: 16px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-areas:
+    "icon label"
+    "icon value";
+  gap: 2px 10px;
+  align-items: center;
+}
+.enterprise-metric .metric-icon { grid-area: icon; margin: 0; }
+.enterprise-metric > span { grid-area: label; color: #7d8ca3; font-size: 10px; }
+.enterprise-metric > strong { grid-area: value; font-size: 22px; }
+.enterprise-card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(220px, 1fr));
+  gap: 12px;
+}
+.enterprise-card {
+  border: 1px solid #202d42;
+  background: #101824;
+  border-radius: 9px;
+  padding: 16px;
+}
+.enterprise-card-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #7597ef;
+}
+.enterprise-card h3 { margin: 16px 0 5px; font-size: 14px; }
+.enterprise-card code { color: #6d7f99; font-size: 10px; }
+.enterprise-card p { margin: 10px 0 0; color: #7e8ea5; font-size: 10px; line-height: 1.55; }
+
+.enterprise-table { width: 100%; overflow-x: auto; }
+.enterprise-table-head,
+.enterprise-table-row {
+  min-width: 760px;
+  display: grid;
+  grid-template-columns: 2fr .75fr .7fr .75fr .7fr .9fr;
+  gap: 12px;
+  align-items: center;
+  padding: 11px 10px;
+}
+.enterprise-table-head {
+  color: #65758d;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  border-bottom: 1px solid #202d42;
+}
+.enterprise-table-row {
+  color: #8fa0b7;
+  font-size: 10px;
+  border-bottom: 1px solid #182337;
+}
+.enterprise-table-row strong { color: #dce6f6; font-size: 11px; }
+
+.enterprise-admin-grid {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 18px;
+}
+.enterprise-list { display: grid; gap: 8px; }
+.enterprise-list-item {
+  border: 1px solid #202d42;
+  background: #101824;
+  border-radius: 8px;
+  padding: 13px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 16px;
+  align-items: center;
+}
+.enterprise-list-item strong,
+.enterprise-list-item p { display: block; }
+.enterprise-list-item strong { margin-top: 4px; font-size: 11px; }
+.enterprise-list-item p { margin: 5px 0 0; color: #7c8ca4; font-size: 10px; }
+.enterprise-list-meta {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  color: #7788a0;
+  font-size: 9px;
+}
+.enterprise-empty { grid-column: 1 / -1; }
+.loading-state { min-height: 250px; place-items: center; color: #7c8ca4; }
+
+/* light theme */
+:root[data-theme="light"] .enterprise-metric,
+:root[data-theme="light"] .enterprise-card,
+:root[data-theme="light"] .enterprise-list-item {
+  background: #ffffff;
+  border-color: #dce3ed;
+}
+:root[data-theme="light"] .enterprise-metric > span,
+:root[data-theme="light"] .enterprise-card p,
+:root[data-theme="light"] .enterprise-list-item p,
+:root[data-theme="light"] .enterprise-list-meta {
+  color: #68778e;
+}
+:root[data-theme="light"] .enterprise-card code { color: #53647c; }
+:root[data-theme="light"] .enterprise-table-head { color: #68778e; border-bottom-color: #dce3ed; }
+:root[data-theme="light"] .enterprise-table-row { color: #586981; border-bottom-color: #e7ecf2; }
+:root[data-theme="light"] .enterprise-table-row strong { color: #162033; }
+
+@media (max-width: 1050px) {
+  .enterprise-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .enterprise-card-grid { grid-template-columns: repeat(2, minmax(220px, 1fr)); }
+  .enterprise-admin-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 700px) {
+  .enterprise-metrics,
+  .enterprise-card-grid { grid-template-columns: 1fr; }
+  .enterprise-metric { padding: 13px; }
+  .enterprise-list-item { grid-template-columns: 1fr; }
+  .enterprise-list-meta { flex-wrap: wrap; }
+}
