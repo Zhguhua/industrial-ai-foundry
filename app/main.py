@@ -23,7 +23,7 @@ from app.semantics import apply_recognition, derive_connectivity, recognize_docu
 
 app = FastAPI(
     title=settings.app_name,
-    version="0.5.1",
+    version="0.5.2",
     description="Governed ontology-centric industrial AI platform",
 )
 
@@ -54,7 +54,7 @@ def startup() -> None:
 
 @app.get("/health")
 def health() -> dict:
-    return {"status": "ok", "service": settings.app_name, "version": "0.5.1"}
+    return {"status": "ok", "service": settings.app_name, "version": "0.5.2"}
 
 
 @app.get("/api/v1/ontology/types")
