@@ -1,4 +1,4 @@
-version: 0.1
+version: 0.4
 namespace: industrial.process_safety
 
 object_types:
@@ -17,7 +17,7 @@ object_types:
   PIDDocument:
     properties: [document_no, revision, title, dexpi_status]
   DEXPINode:
-    properties: [dexpi_id, class, source_document]
+    properties: [dexpi_id, class, source_document, recognition]
   PHAStudy:
     properties: [study_no, methodology, revision, status]
   HAZOPNode:
@@ -40,33 +40,17 @@ object_types:
     properties: [description, due_date, status, assignee]
 
 link_types:
-  LOCATED_IN:
-    source: Equipment
-    target: Unit
-  REPRESENTED_ON:
-    source: Equipment
-    target: PIDDocument
-  REPRESENTED_BY:
-    source: Equipment
-    target: DEXPINode
-  INCLUDED_IN:
-    source: Equipment
-    target: HAZOPNode
-  HAS_DEVIATION:
-    source: HAZOPNode
-    target: Deviation
-  HAS_CAUSE:
-    source: Deviation
-    target: Cause
-  LEADS_TO:
-    source: Deviation
-    target: Consequence
-  MITIGATED_BY:
-    source: Consequence
-    target: Safeguard
-  CREDITED_AS:
-    source: Safeguard
-    target: IPL
-  GENERATES:
-    source: HAZOPNode
-    target: Recommendation
+  LOCATED_IN: {source: Equipment, target: Unit}
+  REPRESENTED_ON: {source: Equipment, target: PIDDocument}
+  REPRESENTED_BY: {source: Equipment, target: DEXPINode}
+  CONNECTED_TO: {source: DEXPINode, target: DEXPINode}
+  FEEDS: {source: Equipment, target: Equipment}
+  MEASURES: {source: Instrument, target: Equipment}
+  CONTROLS: {source: Instrument, target: Equipment}
+  INCLUDED_IN: {source: Equipment, target: HAZOPNode}
+  HAS_DEVIATION: {source: HAZOPNode, target: Deviation}
+  HAS_CAUSE: {source: Deviation, target: Cause}
+  LEADS_TO: {source: Deviation, target: Consequence}
+  MITIGATED_BY: {source: Consequence, target: Safeguard}
+  CREDITED_AS: {source: Safeguard, target: IPL}
+  GENERATES: {source: HAZOPNode, target: Recommendation}
