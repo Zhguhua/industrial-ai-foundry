@@ -23,3 +23,12 @@ class OntologyLinkCreate(BaseModel):
     source_object_id: str
     target_object_id: str
     properties: dict[str, Any] = Field(default_factory=dict)
+
+
+class PHADraftRequest(BaseModel):
+    object_id: str
+
+
+class GraphNeighborhoodRequest(BaseModel):
+    object_id: str
+    depth: int = Field(default=2, ge=1, le=4)
