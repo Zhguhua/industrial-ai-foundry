@@ -60,7 +60,6 @@ export default function App() {
   const [phaDraft, setPhaDraft] = useState<PHADraft | null>(null);
   const [selectedObjectId, setSelectedObjectId] = useState("");
   const [selectedDocumentId, setSelectedDocumentId] = useState("");
-  const [selectedDocumentId, setSelectedDocumentId] = useState("");
 
   const reload = () => {
     api.ontologyTypes().then(setTypes).catch(() => setTypes([]));
@@ -128,33 +127,6 @@ export default function App() {
       reload();
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "Connectivity derivation failed");
-    } finally {
-      setBusy("");
-    }
-  };
-
-  const pidTypeId = types.find((item) => item.key === "PIDDocument")?.id;
-  const pidDocuments = objects.filter((item) => item.type_id === pidTypeId);
-
-  const runRecognition = async () => {
-    if (!selectedDocumentId) return;
-    setBusy("recognition");
-    try {
-      const result = await api.recognitionRun(selectedDocumentId);
-      setNotice("Recognition: " + result.recognized + " auto-recognized, " + result.needs_review + " need review.");
-      reload();
-    } finally {
-      setBusy("");
-    }
-  };
-
-  const deriveConnectivity = async () => {
-    if (!selectedDocumentId) return;
-    setBusy("connectivity");
-    try {
-      const result = await api.connectivityDerive(selectedDocumentId);
-      setNotice("Connectivity: " + result.created_links + " links created.");
-      reload();
     } finally {
       setBusy("");
     }
@@ -357,15 +329,7 @@ export default function App() {
                   {busy === "connectivity" ? "Building..." : "Derive Connectivity"}
                 </button>
               </div>
-              <div className="semantics-workbench">
-                <div><strong>Engineering Semantics</strong><p>Recognize classes and derive connectivity from an imported P&ID.</p></div>
-                <select value={selectedDocumentId} onChange={(e) => setSelectedDocumentId(e.target.value)}>
-                  <option value="">Select PID document</option>
-                  {pidDocuments.map((doc) => <option value={doc.id} key={doc.id}>{doc.name}</option>)}
-                </select>
-                <button className="secondary" onClick={runRecognition} disabled={!selectedDocumentId || busy === "recognition"}>Run Recognition</button>
-                <button className="primary" onClick={deriveConnectivity} disabled={!selectedDocumentId || busy === "connectivity"}>Derive Connectivity</button>
-              </div>
+                            </div>
             </Panel>
           )}
 
