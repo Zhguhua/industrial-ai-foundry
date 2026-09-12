@@ -4,61 +4,55 @@ Private ontology-centric enterprise AI platform for industrial data, engineering
 
 > Independent implementation based on general enterprise ontology and governed-AI architecture patterns. No proprietary Palantir code, assets, trade secrets or copied UI are used.
 
-## v0.2 Foundry Console
+## Current release: v0.3 Industrial Intelligence
 
-The repository now includes a React/TypeScript enterprise console with:
+v0.3 moves the project from a console prototype into an operational industrial intelligence pipeline.
 
-- Overview / operating dashboard
-- Ontology Studio
-- Object Explorer
-- Knowledge Graph workspace
-- Agent Studio
-- Workflow Studio
-- Policy Center
-- Audit Log
-- live FastAPI health and ontology/audit reads
+### Available now
 
-The initial process-safety ontology is seeded automatically at backend startup.
+- React/TypeScript Foundry Console
+- FastAPI application layer
+- PostgreSQL ontology system of record
+- process-safety ontology auto-seed
+- DEXPI / Proteus-style XML ingestion
+- PIDDocument + DEXPINode creation
+- provenance links and import audit events
+- Neo4j projection service
+- graph projection API
+- PHA Copilot context builder
+- structured HAZOP review-draft generation
+- human-approval governance boundary
+- audit trail for agent activity
+- Docker Compose runtime
 
 ## Industrial intelligence flow
 
 ```text
-P&ID / DEXPI
-      |
-      v
-Asset + Instrument Ontology
-      |
-      +------> Process Connectivity Graph
-      |
-      +------> HAZOP / LOPA Context
-                         |
-                         v
-                  Governed AI Agents
-                         |
-                  Policy + Human Gate
-                         |
-                         v
-               Recommendation / Action
-                         |
-                       Audit
+DEXPI / P&ID
+    |
+    v
+Engineering Ingestion
+    |
+    v
+PostgreSQL Ontology
+    |
+    +------> Neo4j Projection
+    |
+    v
+PHA Context Builder
+    |
+    v
+PHA Copilot
+    |
+    v
+Engineer Review
+    |
+    v
+Approved Action
+    |
+    v
+Audit
 ```
-
-## Stack
-
-### Application
-- React + TypeScript + Vite
-- FastAPI
-- SQLAlchemy
-
-### Data / knowledge
-- PostgreSQL
-- pgvector
-- Neo4j
-- Redis
-- MinIO
-
-### Runtime
-- Docker Compose
 
 ## Run locally
 
@@ -67,7 +61,7 @@ cp .env.example .env
 docker compose up --build
 ```
 
-Then open:
+Open:
 
 - Foundry Console: http://localhost:5173
 - FastAPI: http://localhost:8000
@@ -75,24 +69,54 @@ Then open:
 - Neo4j Browser: http://localhost:7474
 - MinIO Console: http://localhost:9001
 
-## Core ontology
+## v0.3 API
+
+### Import DEXPI XML
 
 ```text
-OntologyType
-    |
-    +--> OntologyObject
-            |
-            +--> OntologyLink --> OntologyObject
-
-AgentDefinition
-WorkflowDefinition
-Policy
-AuditEvent
+POST /api/v1/engineering/dexpi/import
+multipart/form-data: file=<xml>
 ```
 
-## Process-safety ontology
+The importer currently preserves source identifiers, DEXPI class information and raw XML attributes. It intentionally does not yet perform authoritative equipment classification.
 
-The current seed includes:
+### Project ontology to Neo4j
+
+```text
+POST /api/v1/graph/project
+```
+
+PostgreSQL remains the governed source of truth. Neo4j is a derived graph projection.
+
+### Read graph neighborhood
+
+```text
+POST /api/v1/graph/neighborhood
+{
+  "object_id": "...",
+  "depth": 2
+}
+```
+
+### Generate PHA Copilot draft
+
+```text
+POST /api/v1/agents/pha/draft
+{
+  "object_id": "..."
+}
+```
+
+The current agent produces structured HAZOP review prompts only.
+
+It does **not**:
+- approve hazards
+- validate safeguards
+- assign IPL credit
+- close recommendations
+- write an approved process-safety decision
+
+## Core process-safety ontology
 
 - Site
 - Plant
@@ -113,79 +137,75 @@ The current seed includes:
 - Recommendation
 - ActionItem
 
-Important relationships include:
-
-```text
-Equipment --LOCATED_IN-----> Unit
-Equipment --REPRESENTED_ON-> PIDDocument
-Equipment --REPRESENTED_BY-> DEXPINode
-Equipment --INCLUDED_IN----> HAZOPNode
-
-HAZOPNode --HAS_DEVIATION--> Deviation
-Deviation --HAS_CAUSE------> Cause
-Deviation --LEADS_TO-------> Consequence
-Consequence --MITIGATED_BY-> Safeguard
-Safeguard --CREDITED_AS----> IPL
-```
-
-## Security model
-
-AI agents must not have unrestricted direct access to enterprise databases.
-
-The intended execution path is:
+## Governance model
 
 ```text
 User / Agent
     |
 Scoped Ontology Query
     |
-Policy Evaluation
+Policy Boundary
     |
-Approved Tool / Action
+Approved Tool
     |
-Human Approval (when required)
+AI Draft / Deterministic Result
+    |
+Human Approval when required
     |
 State Change
     |
 Audit Event
 ```
 
-## Development roadmap
+## Roadmap
 
 ### v0.1 — Foundation ✅
-- ontology object/link model
-- FastAPI
+- ontology core
 - PostgreSQL / pgvector
 - Neo4j / Redis / MinIO
-- governance models
+- FastAPI
 - process-safety ontology
 
 ### v0.2 — Foundry Console ✅
-- React/TypeScript shell
+- React / TypeScript console
 - ontology studio
 - object explorer
 - graph workspace
-- agent studio
-- workflow studio
-- policy center
-- audit console
-- automatic ontology seed
+- agent/workflow/policy/audit views
+- ontology auto-seed
 
-### v0.3 — Industrial Intelligence
-Next:
-- real Neo4j graph projection
-- DEXPI/P&ID ingestion
-- process-connectivity graph
-- editable ontology/object forms
-- pgvector semantic retrieval
-- PHA/HAZOP context builder
+### v0.3 — Industrial Intelligence ✅
+- DEXPI XML ingestion
+- source provenance
+- Neo4j projection
+- graph retrieval endpoint
 - governed PHA Copilot
+- operational engineering/agent UI
 
-### v0.4 — Enterprise AI Governance
+### v0.4 — Engineering Semantics
+Next:
+- DEXPI class-to-ontology mapping
+- equipment/instrument recognition
+- process connectivity derivation
+- pipe / stream / nozzle topology
+- real graph visualization from Neo4j
+- editable recognition review
+- object merge / split / correction
+
+### v0.5 — AI Knowledge Layer
+Planned:
+- pgvector document embeddings
+- PHA knowledge retrieval
+- standards / rules retrieval
+- model-provider abstraction
+- LLM-backed PHA Copilot
+- prompt/context/tool observability
+
+### v0.6 — Enterprise Governance
+Planned:
 - RBAC + ABAC
 - action contracts
-- human-in-the-loop approvals
+- human approval workflows
 - agent evaluation
-- model/provider abstraction
-- prompt/context/tool traceability
 - lineage visualization
+- signed approval records
