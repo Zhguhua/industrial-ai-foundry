@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 
 from sqlalchemy.orm import Session
@@ -67,6 +68,7 @@ def upload_document_version(
     )
     db.add(version)
     document.current_version = version.version_no
+    document.updated_at = datetime.utcnow()
     db.flush()
 
     db.add(
