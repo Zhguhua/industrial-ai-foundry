@@ -1,0 +1,72 @@
+version: 0.1
+namespace: industrial.process_safety
+
+object_types:
+  Site:
+    properties: [name, country, operator]
+  Plant:
+    properties: [name, site_id]
+  Unit:
+    properties: [name, plant_id, description]
+  Equipment:
+    properties: [tag, name, equipment_type, manufacturer, model, design_pressure, design_temperature]
+  Instrument:
+    properties: [tag, function, sil_capable, loop_id]
+  ProcessStream:
+    properties: [name, medium, phase, pressure, temperature, flow]
+  PIDDocument:
+    properties: [document_no, revision, title, dexpi_status]
+  DEXPINode:
+    properties: [dexpi_id, class, source_document]
+  PHAStudy:
+    properties: [study_no, methodology, revision, status]
+  HAZOPNode:
+    properties: [node_no, design_intent]
+  Deviation:
+    properties: [guideword, parameter, description]
+  Cause:
+    properties: [description, category]
+  Consequence:
+    properties: [description, severity]
+  Safeguard:
+    properties: [description, safeguard_type, independence]
+  IPL:
+    properties: [description, pfd, validation_status]
+  LOPAScenario:
+    properties: [initiating_event_frequency, target_frequency]
+  Recommendation:
+    properties: [description, priority, status, owner]
+  ActionItem:
+    properties: [description, due_date, status, assignee]
+
+link_types:
+  LOCATED_IN:
+    source: Equipment
+    target: Unit
+  REPRESENTED_ON:
+    source: Equipment
+    target: PIDDocument
+  REPRESENTED_BY:
+    source: Equipment
+    target: DEXPINode
+  INCLUDED_IN:
+    source: Equipment
+    target: HAZOPNode
+  HAS_DEVIATION:
+    source: HAZOPNode
+    target: Deviation
+  HAS_CAUSE:
+    source: Deviation
+    target: Cause
+  LEADS_TO:
+    source: Deviation
+    target: Consequence
+  MITIGATED_BY:
+    source: Consequence
+    target: Safeguard
+  CREDITED_AS:
+    source: Safeguard
+    target: IPL
+  GENERATES:
+    source: HAZOPNode
+    target: Recommendation
