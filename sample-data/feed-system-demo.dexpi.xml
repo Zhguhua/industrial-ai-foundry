@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PlantModel name="Feed System Demo" xmlns="http://www.dexpi.org/ProteusSchema">
+  <PlantItem ID="P-101" ComponentClass="CentrifugalPump" TagName="P-101" />
+  <PlantItem ID="V-101" ComponentClass="Vessel" TagName="V-101" />
+  <PlantItem ID="FT-101" ComponentClass="FlowTransmitter" TagName="FT-101" />
+  <PlantItem ID="FV-101" ComponentClass="ControlValve" TagName="FV-101" />
+</PlantModel>
