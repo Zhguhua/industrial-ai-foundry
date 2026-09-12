@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { ChangeEvent, useEffect, useMemo, useState } from "react";
 import {
   Activity,
   Bot,
@@ -11,13 +11,15 @@ import {
   Search,
   ShieldCheck,
   Sparkles,
+  Upload,
   Workflow,
   Wrench
 } from "lucide-react";
-import { api, AuditEvent, OntologyObject, OntologyType } from "./api";
+import { api, AuditEvent, OntologyObject, OntologyType, PHADraft } from "./api";
 
 type View =
   | "overview"
+  | "engineering"
   | "ontology"
   | "objects"
   | "graph"
@@ -28,6 +30,7 @@ type View =
 
 const nav: Array<{ id: View; label: string; icon: typeof Activity }> = [
   { id: "overview", label: "Overview", icon: Activity },
+  { id: "engineering", label: "Engineering Data", icon: Database },
   { id: "ontology", label: "Ontology Studio", icon: Braces },
   { id: "objects", label: "Object Explorer", icon: Box },
   { id: "graph", label: "Knowledge Graph", icon: Network },
@@ -44,27 +47,36 @@ const processSafetyTypes = [
   "Recommendation", "ActionItem"
 ];
 
-const graphNodes = [
-  { x: 15, y: 48, label: "P-101", kind: "Equipment" },
-  { x: 38, y: 22, label: "P&ID-1001", kind: "Document" },
-  { x: 52, y: 53, label: "HAZOP N-12", kind: "PHA" },
-  { x: 72, y: 28, label: "No Flow", kind: "Deviation" },
-  { x: 84, y: 62, label: "Pump Failure", kind: "Cause" }
-];
-
 export default function App() {
   const [view, setView] = useState<View>("overview");
   const [types, setTypes] = useState<OntologyType[]>([]);
   const [objects, setObjects] = useState<OntologyObject[]>([]);
   const [audits, setAudits] = useState<AuditEvent[]>([]);
   const [healthy, setHealthy] = useState<boolean | null>(null);
+  const [version, setVersion] = useState("v0.3");
   const [query, setQuery] = useState("");
+  const [busy, setBusy] = useState("");
+  const [notice, setNotice] = useState("");
+  const [phaDraft, setPhaDraft] = useState<PHADraft | null>(null);
+  const [selectedObjectId, setSelectedObjectId] = useState("");
+
+  const reload = () => {
+    api.ontologyTypes().then(setTypes).catch(() => setTypes([]));
+    api.ontologyObjects().then((items) => {
+      setObjects(items);
+      if (!selectedObjectId && items.length) setSelectedObjectId(items[0].id);
+    }).catch(() => setObjects([]));
+    api.audits().then(setAudits).catch(() => setAudits([]));
+  };
 
   useEffect(() => {
-    api.health().then(() => setHealthy(true)).catch(() => setHealthy(false));
-    api.ontologyTypes().then(setTypes).catch(() => setTypes([]));
-    api.ontologyObjects().then(setObjects).catch(() => setObjects([]));
-    api.audits().then(setAudits).catch(() => setAudits([]));
+    api.health()
+      .then((health) => {
+        setHealthy(true);
+        setVersion(`v${health.version}`);
+      })
+      .catch(() => setHealthy(false));
+    reload();
   }, []);
 
   const filteredObjects = useMemo(
@@ -72,59 +84,87 @@ export default function App() {
     [objects, query]
   );
 
+  const projectGraph = async () => {
+    setBusy("graph");
+    setNotice("");
+    try {
+      const result = await api.graphProject();
+      setNotice(`Neo4j updated: ${result.objects_projected} objects, ${result.links_projected} links.`);
+      reload();
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Graph projection failed");
+    } finally {
+      setBusy("");
+    }
+  };
+
+  const runPHADraft = async () => {
+    if (!selectedObjectId) return;
+    setBusy("pha");
+    setNotice("");
+    try {
+      const result = await api.phaDraft(selectedObjectId);
+      setPhaDraft(result);
+      setNotice("PHA Copilot generated a review draft. Human approval remains required.");
+      reload();
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "PHA Copilot failed");
+    } finally {
+      setBusy("");
+    }
+  };
+
+  const importDexpi = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setBusy("dexpi");
+    setNotice("");
+    try {
+      const result = await api.dexpiImport(file);
+      setNotice(
+        `Imported ${file.name}: ${result.created_objects} objects and ${result.created_links} provenance links.`
+      );
+      reload();
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "DEXPI import failed");
+    } finally {
+      setBusy("");
+      event.target.value = "";
+    }
+  };
+
   return (
     <div className="shell">
       <aside className="sidebar">
         <div className="brand">
           <div className="brand-mark"><Hexagon size={18} /></div>
-          <div>
-            <strong>Industrial AI</strong>
-            <span>Foundry</span>
-          </div>
+          <div><strong>Industrial AI</strong><span>Foundry</span></div>
         </div>
-
         <nav>
           {nav.map(({ id, label, icon: Icon }) => (
-            <button
-              key={id}
-              className={view === id ? "nav-item active" : "nav-item"}
-              onClick={() => setView(id)}
-            >
-              <Icon size={17} />
-              {label}
+            <button key={id} className={view === id ? "nav-item active" : "nav-item"} onClick={() => setView(id)}>
+              <Icon size={17} />{label}
             </button>
           ))}
         </nav>
-
         <div className="sidebar-footer">
           <div className="status-row">
             <span className={healthy ? "status-dot online" : "status-dot"} />
-            <div>
-              <strong>{healthy === false ? "API offline" : "Platform online"}</strong>
-              <span>v0.2 Foundry Console</span>
-            </div>
+            <div><strong>{healthy === false ? "API offline" : "Platform online"}</strong><span>{version} Industrial Intelligence</span></div>
           </div>
         </div>
       </aside>
 
       <main className="main">
         <header className="topbar">
-          <div>
-            <p className="eyebrow">ENTERPRISE INTELLIGENCE PLATFORM</p>
-            <h1>{nav.find((n) => n.id === view)?.label}</h1>
-          </div>
+          <div><p className="eyebrow">ENTERPRISE INTELLIGENCE PLATFORM</p><h1>{nav.find((n) => n.id === view)?.label}</h1></div>
           <div className="top-actions">
-            <div className="search">
-              <Search size={16} />
-              <input
-                placeholder="Search objects, assets, studies..."
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-              />
-            </div>
-            <button className="primary"><Sparkles size={16} /> Ask Foundry AI</button>
+            <div className="search"><Search size={16} /><input placeholder="Search objects, assets, studies..." value={query} onChange={(e) => setQuery(e.target.value)} /></div>
+            <button className="primary" onClick={() => setView("agents")}><Sparkles size={16} /> Ask Foundry AI</button>
           </div>
         </header>
+
+        {notice && <div className="notice">{notice}</div>}
 
         <section className="content">
           {view === "overview" && (
@@ -132,25 +172,16 @@ export default function App() {
               <div className="hero-card">
                 <div>
                   <p className="eyebrow">INDUSTRIAL KNOWLEDGE OPERATING LAYER</p>
-                  <h2>Turn engineering data into governed AI decisions.</h2>
-                  <p className="hero-copy">
-                    A semantic layer connecting assets, P&IDs, DEXPI, process safety studies,
-                    knowledge graphs and AI agents through one governed ontology.
-                  </p>
+                  <h2>From engineering evidence to governed AI decisions.</h2>
+                  <p className="hero-copy">DEXPI/P&ID data enters a typed ontology, is projected into a knowledge graph and becomes controlled context for industrial AI agents.</p>
                   <div className="hero-actions">
-                    <button className="primary" onClick={() => setView("ontology")}>
-                      Open Ontology Studio
-                    </button>
-                    <button className="secondary" onClick={() => setView("graph")}>
-                      Explore Graph
-                    </button>
+                    <button className="primary" onClick={() => setView("engineering")}>Import Engineering Data</button>
+                    <button className="secondary" onClick={() => setView("agents")}>Run PHA Copilot</button>
                   </div>
                 </div>
                 <div className="hero-diagram">
-                  {["Data", "Ontology", "Graph", "Agents", "Actions"].map((item, index) => (
-                    <div className="flow-node" key={item}>
-                      <span>{index + 1}</span>{item}
-                    </div>
+                  {["DEXPI", "Ontology", "Neo4j", "PHA Copilot", "Engineer Approval"].map((item, index) => (
+                    <div className="flow-node" key={item}><span>{index + 1}</span>{item}</div>
                   ))}
                 </div>
               </div>
@@ -158,57 +189,62 @@ export default function App() {
               <div className="metric-grid">
                 <Metric title="Ontology types" value={String(types.length || processSafetyTypes.length)} note="semantic object classes" icon={Braces} />
                 <Metric title="Managed objects" value={String(objects.length)} note="governed enterprise entities" icon={Box} />
-                <Metric title="Knowledge relations" value="10" note="initial process-safety link types" icon={Network} />
+                <Metric title="Industrial graph" value="Neo4j" note="projected semantic relations" icon={Network} />
                 <Metric title="Audit events" value={String(audits.length)} note="traceable platform actions" icon={ShieldCheck} />
               </div>
 
               <div className="two-col">
-                <Panel title="Industrial knowledge domains" subtitle="Initial ontology scope">
-                  <div className="domain-grid">
-                    {[
-                      ["Asset Intelligence", "Equipment, instruments, units", Wrench],
-                      ["Engineering", "P&ID, DEXPI, connectivity", Database],
-                      ["Process Safety", "HAZOP, LOPA, IPL, safeguards", ShieldCheck],
-                      ["AI Operations", "Agents, workflows, approvals", Bot]
-                    ].map(([title, copy, Icon]) => {
-                      const I = Icon as typeof Wrench;
-                      return <div className="domain-card" key={String(title)}>
-                        <I size={18} />
-                        <strong>{String(title)}</strong>
-                        <span>{String(copy)}</span>
-                      </div>;
-                    })}
+                <Panel title="Industrial intelligence pipeline" subtitle="Evidence stays traceable">
+                  <div className="pipeline">
+                    {["DEXPI / source evidence", "Typed ontology objects", "Semantic links", "Neo4j projection", "Scoped PHA context", "AI review draft", "Engineer decision + audit"].map((step, index) => (
+                      <div className="pipeline-step" key={step}><span>{String(index + 1).padStart(2, "0")}</span><div>{step}</div></div>
+                    ))}
                   </div>
                 </Panel>
-
-                <Panel title="Governed AI pipeline" subtitle="Trust boundary by design">
-                  <div className="pipeline">
-                    {["Source data", "Typed ontology", "Scoped context", "Agent", "Policy", "Human approval", "Action + audit"].map((step, index) => (
-                      <div className="pipeline-step" key={step}>
-                        <span>{String(index + 1).padStart(2, "0")}</span>
-                        <div>{step}</div>
-                      </div>
-                    ))}
+                <Panel title="Safety governance" subtitle="AI is advisory, not authoritative">
+                  <div className="domain-grid">
+                    <Domain title="No direct DB writes" copy="Agents use typed services." icon={Database} />
+                    <Domain title="Human approval" copy="Safety decisions remain accountable." icon={ShieldCheck} />
+                    <Domain title="Audited context" copy="Agent actions emit trace events." icon={GitBranch} />
+                    <Domain title="Evidence first" copy="Source properties remain attached." icon={Wrench} />
                   </div>
                 </Panel>
               </div>
             </>
           )}
 
+          {view === "engineering" && (
+            <Panel title="Engineering Data Intake" subtitle="Import DEXPI / Proteus XML into the governed ontology">
+              <div className="ingest-grid">
+                <div className="upload-card">
+                  <Upload size={28} />
+                  <h3>DEXPI XML Import</h3>
+                  <p>Creates a PIDDocument, DEXPINode objects, source attributes and provenance links.</p>
+                  <label className="primary file-button">
+                    {busy === "dexpi" ? "Importing..." : "Choose XML file"}
+                    <input type="file" accept=".xml,.dexpi" onChange={importDexpi} disabled={busy === "dexpi"} />
+                  </label>
+                </div>
+                <div className="ingest-info">
+                  <strong>Current ingestion contract</strong>
+                  <span>✓ XML source retained as traceable engineering evidence</span>
+                  <span>✓ DEXPI identifiers converted to ontology external IDs</span>
+                  <span>✓ Raw attributes preserved for future mapping rules</span>
+                  <span>✓ Import action written to audit log</span>
+                  <span>○ Equipment / Instrument class mapping is next</span>
+                  <span>○ Connectivity derivation is next</span>
+                </div>
+              </div>
+            </Panel>
+          )}
+
           {view === "ontology" && (
             <Panel title="Ontology Studio" subtitle="Define the semantic contract used by applications and AI">
-              <div className="toolbar">
-                <button className="primary">+ New object type</button>
-                <button className="secondary">Import schema</button>
-              </div>
               <div className="type-grid">
                 {(types.length ? types.map((t) => t.name) : processSafetyTypes).map((name, index) => (
                   <div className="type-card" key={name}>
                     <div className="type-icon"><Braces size={18} /></div>
-                    <div>
-                      <strong>{name}</strong>
-                      <span>{index < 7 ? "Asset & engineering" : "Process safety"}</span>
-                    </div>
+                    <div><strong>{name}</strong><span>{index < 7 ? "Asset & engineering" : "Process safety"}</span></div>
                     <span className="pill">Object type</span>
                   </div>
                 ))}
@@ -218,63 +254,59 @@ export default function App() {
 
           {view === "objects" && (
             <Panel title="Object Explorer" subtitle="Browse governed enterprise objects">
-              <div className="table-head">
-                <span>Name</span><span>Type ID</span><span>Classification</span><span>Created</span>
-              </div>
+              <div className="table-head"><span>Name</span><span>Type ID</span><span>Classification</span><span>Created</span></div>
               {filteredObjects.length ? filteredObjects.map((obj) => (
                 <div className="table-row" key={obj.id}>
-                  <strong>{obj.name}</strong>
-                  <code>{obj.type_id.slice(0, 12)}</code>
-                  <span className="pill">{obj.classification}</span>
-                  <span>{new Date(obj.created_at).toLocaleString()}</span>
+                  <strong>{obj.name}</strong><code>{obj.type_id.slice(0, 12)}</code><span className="pill">{obj.classification}</span><span>{new Date(obj.created_at).toLocaleString()}</span>
                 </div>
-              )) : (
-                <EmptyState
-                  title="No objects yet"
-                  copy="Create ontology objects through the API or the upcoming object editor."
-                />
-              )}
+              )) : <EmptyState title="No objects yet" copy="Import DEXPI or create ontology objects through the API." />}
             </Panel>
           )}
 
           {view === "graph" && (
-            <Panel title="Knowledge Graph" subtitle="Semantic relationships across engineering and process safety">
-              <div className="graph-canvas">
-                <svg viewBox="0 0 100 80" preserveAspectRatio="none">
-                  <line x1="15" y1="48" x2="38" y2="22" />
-                  <line x1="15" y1="48" x2="52" y2="53" />
-                  <line x1="52" y1="53" x2="72" y2="28" />
-                  <line x1="72" y1="28" x2="84" y2="62" />
-                </svg>
-                {graphNodes.map((node) => (
-                  <div className="graph-node" key={node.label} style={{ left: `${node.x}%`, top: `${node.y}%` }}>
-                    <span>{node.kind}</span>
-                    <strong>{node.label}</strong>
-                  </div>
+            <Panel title="Knowledge Graph" subtitle="Project governed ontology data into Neo4j for traversal">
+              <div className="toolbar">
+                <button className="primary" onClick={projectGraph} disabled={busy === "graph"}>{busy === "graph" ? "Projecting..." : "Project Ontology to Neo4j"}</button>
+                <span className="toolbar-note">PostgreSQL remains the system of record.</span>
+              </div>
+              <div className="graph-architecture">
+                {["PostgreSQL Ontology", "Projection Service", "Neo4j Graph", "Agent Retrieval"].map((label, index) => (
+                  <div className="graph-stage" key={label}><span>{index + 1}</span><strong>{label}</strong></div>
                 ))}
               </div>
             </Panel>
           )}
 
           {view === "agents" && (
-            <Panel title="Agent Studio" subtitle="AI agents operate through governed ontology tools">
-              <div className="card-grid">
-                <AgentCard name="PHA Copilot" role="Analyze HAZOP context and propose structured deviations" tools={["Ontology", "Graph", "PHA Library"]} />
-                <AgentCard name="P&ID Intelligence" role="Review DEXPI topology and engineering object context" tools={["DEXPI", "Graph", "Vision"]} />
-                <AgentCard name="LOPA Analyst" role="Evaluate scenarios, safeguards and IPL evidence" tools={["Ontology", "Calculator", "Policy"]} />
+            <Panel title="PHA Copilot" subtitle="Generate structured review prompts from governed ontology context">
+              <div className="agent-runner">
+                <div className="agent-control">
+                  <label>Context object</label>
+                  <select value={selectedObjectId} onChange={(e) => setSelectedObjectId(e.target.value)}>
+                    <option value="">Select an object</option>
+                    {objects.map((obj) => <option value={obj.id} key={obj.id}>{obj.name}</option>)}
+                  </select>
+                  <button className="primary" onClick={runPHADraft} disabled={!selectedObjectId || busy === "pha"}>{busy === "pha" ? "Analyzing..." : "Generate HAZOP Review Draft"}</button>
+                  <div className="governance-box"><ShieldCheck size={18} /><div><strong>Governed mode</strong><span>No validated hazard, safeguard credit or approved recommendation is created automatically.</span></div></div>
+                </div>
+                <div className="draft-panel">
+                  <h3>Candidate deviations</h3>
+                  {phaDraft?.candidate_deviations.length ? phaDraft.candidate_deviations.map((item) => (
+                    <div className="deviation-card" key={item.guideword + item.parameter}>
+                      <div><span className="pill">{item.guideword}</span><span className="pill">{item.parameter}</span></div>
+                      <p>{item.question}</p>
+                    </div>
+                  )) : <EmptyState title="No draft generated" copy="Select an imported or manually created object and run PHA Copilot." />}
+                </div>
               </div>
             </Panel>
           )}
 
           {view === "workflows" && (
-            <Panel title="Workflow Studio" subtitle="Combine deterministic automation, AI and human approval">
+            <Panel title="Workflow Studio" subtitle="Deterministic automation + governed AI + engineer approval">
               <div className="workflow-canvas">
-                {["DEXPI import", "Validate topology", "Build ontology", "AI HAZOP draft", "Engineer review", "Publish revision"].map((step, i) => (
-                  <div className="workflow-node" key={step}>
-                    <span>{i + 1}</span>
-                    <strong>{step}</strong>
-                    <small>{i === 3 ? "AI step" : i === 4 ? "Human gate" : "Deterministic"}</small>
-                  </div>
+                {["DEXPI import", "Validate evidence", "Build ontology", "Project graph", "AI HAZOP draft", "Engineer review", "Publish"].map((step, i) => (
+                  <div className="workflow-node" key={step}><span>{i + 1}</span><strong>{step}</strong><small>{i === 4 ? "AI step" : i === 5 ? "Human gate" : "Deterministic"}</small></div>
                 ))}
               </div>
             </Panel>
@@ -286,22 +318,15 @@ export default function App() {
                 <Policy name="Engineering write protection" scope="P&ID / DEXPI" rule="AI may propose changes; engineer approval required." />
                 <Policy name="Safety recommendation approval" scope="PHA / HAZOP" rule="Recommendations require named human reviewer before publish." />
                 <Policy name="IPL validation boundary" scope="LOPA / IPL" rule="AI cannot assign validated IPL credit without evidence and approval." />
-                <Policy name="Agent data scope" scope="Enterprise ontology" rule="Agents receive only explicitly scoped objects and properties." />
+                <Policy name="Graph source-of-truth" scope="Neo4j" rule="Graph projection is derived; PostgreSQL ontology remains authoritative." />
               </div>
             </Panel>
           )}
 
           {view === "audit" && (
-            <Panel title="Audit Log" subtitle="Trace ontology mutations and future AI actions">
+            <Panel title="Audit Log" subtitle="Trace ontology, DEXPI, graph and agent actions">
               {audits.length ? audits.map((event) => (
-                <div className="audit-row" key={event.id}>
-                  <span className="audit-icon"><GitBranch size={15} /></span>
-                  <div>
-                    <strong>{event.action}</strong>
-                    <span>{event.actor_type}:{event.actor_id} · {event.target_type || "platform"}</span>
-                  </div>
-                  <time>{new Date(event.created_at).toLocaleString()}</time>
-                </div>
+                <div className="audit-row" key={event.id}><span className="audit-icon"><GitBranch size={15} /></span><div><strong>{event.action}</strong><span>{event.actor_type}:{event.actor_id} · {event.target_type || "platform"}</span></div><time>{new Date(event.created_at).toLocaleString()}</time></div>
               )) : <EmptyState title="No audit events yet" copy="Platform mutations will appear here automatically." />}
             </Panel>
           )}
@@ -312,41 +337,21 @@ export default function App() {
 }
 
 function Metric({ title, value, note, icon: Icon }: { title: string; value: string; note: string; icon: typeof Activity }) {
-  return <div className="metric-card">
-    <div className="metric-icon"><Icon size={18} /></div>
-    <span>{title}</span>
-    <strong>{value}</strong>
-    <small>{note}</small>
-  </div>;
+  return <div className="metric-card"><div className="metric-icon"><Icon size={18} /></div><span>{title}</span><strong>{value}</strong><small>{note}</small></div>;
 }
 
 function Panel({ title, subtitle, children }: { title: string; subtitle: string; children: React.ReactNode }) {
-  return <section className="panel">
-    <div className="panel-header">
-      <div><h3>{title}</h3><p>{subtitle}</p></div>
-    </div>
-    {children}
-  </section>;
+  return <section className="panel"><div className="panel-header"><div><h3>{title}</h3><p>{subtitle}</p></div></div>{children}</section>;
 }
 
 function EmptyState({ title, copy }: { title: string; copy: string }) {
   return <div className="empty"><Database size={28} /><strong>{title}</strong><span>{copy}</span></div>;
 }
 
-function AgentCard({ name, role, tools }: { name: string; role: string; tools: string[] }) {
-  return <div className="agent-card">
-    <div className="agent-avatar"><Bot size={20} /></div>
-    <strong>{name}</strong>
-    <p>{role}</p>
-    <div className="tool-row">{tools.map((tool) => <span className="pill" key={tool}>{tool}</span>)}</div>
-  </div>;
+function Domain({ title, copy, icon: Icon }: { title: string; copy: string; icon: typeof Activity }) {
+  return <div className="domain-card"><Icon size={18} /><strong>{title}</strong><span>{copy}</span></div>;
 }
 
 function Policy({ name, scope, rule }: { name: string; scope: string; rule: string }) {
-  return <div className="policy-row">
-    <ShieldCheck size={18} />
-    <div><strong>{name}</strong><span>{scope}</span></div>
-    <p>{rule}</p>
-    <span className="pill good">Enforced</span>
-  </div>;
+  return <div className="policy-row"><ShieldCheck size={18} /><div><strong>{name}</strong><span>{scope}</span></div><p>{rule}</p><span className="pill good">Enforced</span></div>;
 }
