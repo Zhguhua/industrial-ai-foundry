@@ -1,0 +1,59 @@
+name: Run complete enterprise demo
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  demo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Prepare environment
+        run: cp .env.example .env
+
+      - name: Build and start complete demo
+        run: docker compose up --build -d
+
+      - name: Wait for demo seed
+        run: |
+          set -e
+          for i in $(seq 1 90); do
+            if docker compose ps demo-seed --format json | grep -q '"ExitCode":0'; then
+              echo "Demo seed completed successfully"
+              exit 0
+            fi
+            if docker compose ps demo-seed --format json | grep -q '"State":"exited"'; then
+              echo "Demo seed exited unsuccessfully"
+              docker compose logs demo-seed api postgres neo4j minio
+              exit 1
+            fi
+            sleep 2
+          done
+          echo "Timed out waiting for demo seed"
+          docker compose logs demo-seed api postgres neo4j minio
+          exit 1
+
+      - name: Run smoke test
+        run: python scripts/smoke-test.py
+
+      - name: Print demo results
+        run: python scripts/demo-results.py
+
+      - name: Show service status
+        run: docker compose ps
+
+      - name: Show logs on failure
+        if: failure()
+        run: docker compose logs --no-color api demo-seed postgres neo4j minio frontend
+
+      - name: Stop demo
+        if: always()
+        run: docker compose down -v
