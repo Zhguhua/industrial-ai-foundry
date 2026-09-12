@@ -9,7 +9,9 @@ from openpyxl import Workbook
 from pypdf import PdfWriter
 from sqlalchemy.orm import Session
 
+from app.config import settings
 from app.db import Base, SessionLocal, engine
+from app.graph import GraphService
 from app.document_runtime import upload_document_version
 from app.enterprise_models import (
     AdministrativeCase,
@@ -315,6 +317,10 @@ def _upload_if_missing(
 
 
 def seed_demo() -> None:
+    if not settings.demo_data_enabled:
+        print("Demo data disabled; skipping seed.")
+        return
+
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     try:
@@ -616,7 +622,36 @@ def seed_demo() -> None:
             )
 
         db.commit()
-        print("Demo data seed complete.")
+
+        last_graph_error: Exception | None = None
+        for attempt in range(10):
+            service = GraphService()
+            try:
+                result = service.project_from_postgres(db)
+                db.add(
+                    AuditEvent(
+                        actor_type="system",
+                        actor_id="demo-seed",
+                        action="demo.graph.project",
+                        target_type="KnowledgeGraph",
+                        context=result,
+                    )
+                )
+                db.commit()
+                last_graph_error = None
+                break
+            except Exception as exc:
+                last_graph_error = exc
+                db.rollback()
+                if attempt < 9:
+                    time.sleep(2)
+            finally:
+                service.close()
+
+        if last_graph_error:
+            print(f"Demo data seeded; Neo4j projection deferred: {last_graph_error}")
+        else:
+            print("Demo data seed and Neo4j projection complete.")
     finally:
         db.close()
 
