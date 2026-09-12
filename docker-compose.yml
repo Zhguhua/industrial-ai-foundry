@@ -24,12 +24,6 @@ services:
       - "7687:7687"
     volumes:
       - neo4j_data:/data
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:7474 >/dev/null 2>&1 || exit 1"]
-      interval: 8s
-      timeout: 5s
-      retries: 20
-      start_period: 15s
 
   redis:
     image: redis:7-alpine
