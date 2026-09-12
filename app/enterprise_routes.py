@@ -194,12 +194,20 @@ def download_document_version(
     except Exception as exc:
         raise HTTPException(status_code=503, detail=f"Document storage unavailable: {exc}") from exc
 
+    def iterator():
+        try:
+            yield from stream.stream(32 * 1024)
+        finally:
+            stream.close()
+            stream.release_conn()
+
+    safe_name = version.file_name.replace('"', "").replace("\\r", "").replace("\\n", "")
     headers = {
-        "Content-Disposition": f'attachment; filename="{version.file_name}"',
+        "Content-Disposition": f'attachment; filename="{safe_name}"',
         "Content-Length": str(size),
     }
     return StreamingResponse(
-        stream,
+        iterator(),
         media_type=content_type or version.mime_type or "application/octet-stream",
         headers=headers,
     )
