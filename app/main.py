@@ -18,7 +18,11 @@ from app.schemas import (
     DocumentRequest,
     RecognitionApplyRequest,
 )
-from app.seed import seed_enterprise_ontology, seed_process_safety_ontology
+from app.seed import (
+    seed_enterprise_demo_data,
+    seed_enterprise_ontology,
+    seed_process_safety_ontology,
+)
 from app.semantics import apply_recognition, derive_connectivity, recognize_document
 
 app = FastAPI(
@@ -48,6 +52,7 @@ def startup() -> None:
     try:
         seed_process_safety_ontology(db)
         seed_enterprise_ontology(db)
+        seed_enterprise_demo_data(db)
     finally:
         db.close()
 
