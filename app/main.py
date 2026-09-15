@@ -21,6 +21,7 @@ from app.schemas import (
 from app.seed import (
     seed_enterprise_demo_data,
     seed_enterprise_ontology,
+    seed_graph_demo_data,
     seed_process_safety_ontology,
 )
 from app.semantics import apply_recognition, derive_connectivity, recognize_document
@@ -53,6 +54,16 @@ def startup() -> None:
         seed_process_safety_ontology(db)
         seed_enterprise_ontology(db)
         seed_enterprise_demo_data(db)
+        seed_graph_demo_data(db)
+        graph_service = None
+        try:
+            graph_service = GraphService()
+            graph_service.project_from_postgres(db)
+        except Exception:
+            db.rollback()
+        finally:
+            if graph_service:
+                graph_service.close()
     finally:
         db.close()
 
