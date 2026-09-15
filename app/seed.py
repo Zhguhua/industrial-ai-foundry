@@ -13,7 +13,7 @@ from app.enterprise_models import (
     Workspace,
     WorkspaceMember,
 )
-from app.models import AuditEvent, OntologyType
+from app.models import AuditEvent, OntologyLink, OntologyObject, OntologyType
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -244,3 +244,142 @@ def seed_enterprise_demo_data(db: Session) -> int:
     )
     db.commit()
     return 12
+
+
+def seed_graph_demo_data(db: Session) -> int:
+    """Create stable process-safety objects and links for the graph demo."""
+    if db.query(OntologyObject).filter(OntologyObject.external_id == "demo-site-north").first():
+        return 0
+
+    type_ids = {
+        item.key: item.id
+        for item in db.query(OntologyType).filter(
+            OntologyType.key.in_(
+                [
+                    "Site",
+                    "Plant",
+                    "Unit",
+                    "Equipment",
+                    "Instrument",
+                    "PIDDocument",
+                    "HAZOPNode",
+                    "Deviation",
+                    "Safeguard",
+                ]
+            )
+        )
+    }
+    required_types = {
+        "Site",
+        "Plant",
+        "Unit",
+        "Equipment",
+        "Instrument",
+        "PIDDocument",
+        "HAZOPNode",
+        "Deviation",
+        "Safeguard",
+    }
+    if required_types - type_ids.keys():
+        return 0
+
+    definitions = [
+        (
+            "Site",
+            "demo-site-north",
+            "North Operations Site",
+            {"country": "DE", "operator": "Foundry Energy"},
+        ),
+        ("Plant", "demo-plant-north", "North Processing Plant", {"site_id": "demo-site-north"}),
+        ("Unit", "demo-unit-feed", "Feed Preparation Unit", {"plant_id": "demo-plant-north"}),
+        (
+            "Equipment",
+            "demo-p-1001",
+            "Feed Pump P-1001",
+            {"tag": "P-1001", "equipment_type": "centrifugal_pump"},
+        ),
+        (
+            "Equipment",
+            "demo-v-1001",
+            "Feed Vessel V-1001",
+            {"tag": "V-1001", "equipment_type": "pressure_vessel"},
+        ),
+        (
+            "Instrument",
+            "demo-pt-1001",
+            "Feed Pressure Transmitter PT-1001",
+            {"tag": "PT-1001", "function": "pressure_indication"},
+        ),
+        (
+            "PIDDocument",
+            "demo-pid-1001",
+            "P&ID 1001 - Feed System",
+            {"document_no": "P&ID-1001", "revision": "C"},
+        ),
+        (
+            "HAZOPNode",
+            "demo-hazop-feed",
+            "Feed system HAZOP node",
+            {"node_no": "HZ-01", "design_intent": "Maintain controlled feed pressure"},
+        ),
+        (
+            "Deviation",
+            "demo-deviation-high-pressure",
+            "High feed pressure",
+            {"guideword": "MORE", "parameter": "Pressure"},
+        ),
+        (
+            "Safeguard",
+            "demo-safeguard-psv",
+            "Pressure relief valve PSV-1001",
+            {"safeguard_type": "relief_device", "independence": True},
+        ),
+    ]
+    objects = {
+        external_id: OntologyObject(
+            type_id=type_ids[type_key],
+            external_id=external_id,
+            name=name,
+            properties=properties,
+            classification="internal",
+        )
+        for type_key, external_id, name, properties in definitions
+    }
+    db.add_all(objects.values())
+    db.flush()
+
+    links = [
+        ("LOCATED_IN", "demo-plant-north", "demo-site-north"),
+        ("LOCATED_IN", "demo-unit-feed", "demo-plant-north"),
+        ("LOCATED_IN", "demo-p-1001", "demo-unit-feed"),
+        ("LOCATED_IN", "demo-v-1001", "demo-unit-feed"),
+        ("MEASURES", "demo-pt-1001", "demo-v-1001"),
+        ("FEEDS", "demo-p-1001", "demo-v-1001"),
+        ("REPRESENTED_ON", "demo-p-1001", "demo-pid-1001"),
+        ("INCLUDED_IN", "demo-p-1001", "demo-hazop-feed"),
+        ("HAS_DEVIATION", "demo-hazop-feed", "demo-deviation-high-pressure"),
+        ("MITIGATED_BY", "demo-deviation-high-pressure", "demo-safeguard-psv"),
+    ]
+    db.add_all(
+        [
+            OntologyLink(
+                link_type=link_type,
+                source_object_id=objects[source].id,
+                target_object_id=objects[target].id,
+                properties={"source": "demo-seed"},
+            )
+            for link_type, source, target in links
+        ]
+    )
+    db.add(
+        AuditEvent(
+            actor_type="system",
+            actor_id="graph-demo-seeder",
+            action="graph.seed.demo",
+            target_type="OntologyObject",
+            target_id=objects["demo-site-north"].id,
+            context={"objects": len(objects), "links": len(links)},
+        )
+    )
+    db.commit()
+    return len(objects) + len(links)
